@@ -25,6 +25,7 @@ const ProtectedRoute: React.FC<{ children: React.ReactNode }> = ({ children }) =
   }
 
   if (!user) return <Navigate to="/login" replace />;
+  if (!user.email_confirmed_at) return <Navigate to="/login" state={{ unconfirmed: true }} replace />;
   return <>{children}</>;
 };
 

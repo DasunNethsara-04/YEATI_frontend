@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
+import { Link, useNavigate, useLocation } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import Button from '../components/ui/Button';
 import Input from '../components/ui/Input';
@@ -38,7 +38,9 @@ const EyeIcon = ({ open }: { open: boolean }) =>
 
 const LoginPage: React.FC = () => {
   const navigate = useNavigate();
+  const location = useLocation();
   const { signIn } = useAuth();
+  const isUnconfirmed = location.state?.unconfirmed === true;
 
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
@@ -144,6 +146,21 @@ const LoginPage: React.FC = () => {
             <h2 className="text-2xl font-bold text-agri-text">Welcome back</h2>
             <p className="text-agri-subtext text-sm">Sign in to your YEATI account</p>
           </div>
+
+          {/* Unconfirmed email warning */}
+          {isUnconfirmed && (
+            <div className="rounded-xl bg-amber-50 border border-amber-200 px-4 py-4 text-sm text-amber-800 space-y-1">
+              <div className="flex items-center gap-2.5 font-semibold">
+                <svg className="h-5 w-5 flex-shrink-0 text-amber-500" viewBox="0 0 20 20" fill="currentColor">
+                  <path fillRule="evenodd" d="M8.485 2.495c.673-1.167 2.357-1.167 3.03 0l6.28 10.875c.673 1.167-.17 2.625-1.516 2.625H3.72c-1.347 0-2.189-1.458-1.515-2.625L8.485 2.495zM10 5a.75.75 0 01.75.75v3.5a.75.75 0 01-1.5 0v-3.5A.75.75 0 0110 5zm0 9a1 1 0 100-2 1 1 0 000 2z" clipRule="evenodd" />
+                </svg>
+                Please confirm your email first
+              </div>
+              <p className="text-amber-700 pl-7">
+                Check your inbox for a confirmation link from YEATI and click it before signing in.
+              </p>
+            </div>
+          )}
 
           {/* General error */}
           {errors.general && (

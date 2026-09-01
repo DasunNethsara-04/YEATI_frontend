@@ -4,7 +4,6 @@ import LoginPage from './pages/LoginPage';
 import RegisterPage from './pages/RegisterPage';
 import DashboardPage from './pages/DashboardPage';
 import ProfilePage from './pages/ProfilePage';
-import AuthCallbackPage from './pages/AuthCallbackPage';
 
 // ─── Protected Route Guard ────────────────────────────────────────────────────
 const ProtectedRoute: React.FC<{ children: React.ReactNode }> = ({ children }) => {
@@ -26,7 +25,6 @@ const ProtectedRoute: React.FC<{ children: React.ReactNode }> = ({ children }) =
   }
 
   if (!user) return <Navigate to="/login" replace />;
-  if (!user.email_confirmed_at) return <Navigate to="/login" state={{ unconfirmed: true }} replace />;
   return <>{children}</>;
 };
 
@@ -92,7 +90,6 @@ const App = () => (
             </ProtectedRoute>
           }
         />
-        <Route path="/auth/callback" element={<AuthCallbackPage />} />
         {/* Default: redirect to dashboard (will bounce to login if not authed) */}
         <Route path="*" element={<Navigate to="/dashboard" replace />} />
       </Routes>

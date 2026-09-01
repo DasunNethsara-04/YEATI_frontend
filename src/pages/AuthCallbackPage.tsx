@@ -6,20 +6,18 @@ import { supabase } from "../lib/supabaseClient";
 // Supabase appends the session tokens to the URL; the JS client picks them up automatically.
 const AuthCallbackPage: React.FC = () => {
   const navigate = useNavigate();
-  const [message, setMessage] = useState("Confirming your email…");
+  const [message, setMessage] = useState("Confirming your email...");
 
   useEffect(() => {
-    // onAuthStateChange fires when Supabase detects the token in the URL
     const { data: { subscription } } = supabase.auth.onAuthStateChange((event) => {
       if (event === "SIGNED_IN") {
-        setMessage("Email confirmed! Taking you to your dashboard…");
+        setMessage("Email confirmed! Taking you to your dashboard...");
         setTimeout(() => navigate("/dashboard", { replace: true }), 1500);
       } else if (event === "TOKEN_REFRESHED") {
         navigate("/dashboard", { replace: true });
       }
     });
 
-    // Fallback: if no event fires in 5s, redirect to login
     const timeout = setTimeout(() => {
       navigate("/login", { replace: true });
     }, 5000);
@@ -33,7 +31,6 @@ const AuthCallbackPage: React.FC = () => {
   return (
     <div className="min-h-screen bg-agri-bg flex items-center justify-center">
       <div className="flex flex-col items-center gap-5 text-center px-6">
-        {/* Spinner */}
         <div className="relative h-16 w-16">
           <div className="absolute inset-0 rounded-full border-4 border-agri-border" />
           <div className="absolute inset-0 rounded-full border-4 border-t-agri-primary animate-spin" />
@@ -45,7 +42,7 @@ const AuthCallbackPage: React.FC = () => {
         </div>
         <div className="space-y-1">
           <p className="text-agri-text font-semibold text-lg">{message}</p>
-          <p className="text-agri-subtext text-sm">Please wait a moment…</p>
+          <p className="text-agri-subtext text-sm">Please wait a moment...</p>
         </div>
       </div>
     </div>

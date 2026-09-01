@@ -108,6 +108,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
         password,
         options: {
           data: { full_name: fullName },
+          emailRedirectTo: `${window.location.origin}/auth/callback`,
         },
       });
       if (error) return { error: error.message };

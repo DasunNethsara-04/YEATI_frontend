@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
+import { Link } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import Button from '../components/ui/Button';
 import Input from '../components/ui/Input';
@@ -81,7 +81,6 @@ interface FormErrors {
 }
 
 const RegisterPage: React.FC = () => {
-  const navigate = useNavigate();
   const { signUp } = useAuth();
 
   const [fullName, setFullName] = useState('');
@@ -117,7 +116,6 @@ const RegisterPage: React.FC = () => {
       setErrors({ general: error });
     } else {
       setSuccess(true);
-      setTimeout(() => navigate('/dashboard'), 1500);
     }
     setIsLoading(false);
   };
@@ -193,11 +191,17 @@ const RegisterPage: React.FC = () => {
 
           {/* Success banner */}
           {success && (
-            <div className="flex items-center gap-2.5 rounded-xl bg-green-50 border border-green-200 px-4 py-3 text-sm text-green-700">
-              <svg className="h-4 w-4 flex-shrink-0" viewBox="0 0 20 20" fill="currentColor">
-                <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.857-9.809a.75.75 0 00-1.214-.882l-3.483 4.79-1.88-1.88a.75.75 0 10-1.06 1.061l2.5 2.5a.75.75 0 001.137-.089l4-5.5z" clipRule="evenodd" />
-              </svg>
-              Account created! Redirecting to your dashboard…
+            <div className="rounded-xl bg-green-50 border border-green-200 px-4 py-4 text-sm text-green-800 space-y-1">
+              <div className="flex items-center gap-2.5 font-semibold">
+                <svg className="h-5 w-5 flex-shrink-0 text-green-600" viewBox="0 0 20 20" fill="currentColor">
+                  <path d="M2.003 5.884L10 9.882l7.997-3.998A2 2 0 0016 4H4a2 2 0 00-1.997 1.884z" />
+                  <path d="M18 8.118l-8 4-8-4V14a2 2 0 002 2h12a2 2 0 002-2V8.118z" />
+                </svg>
+                Check your email to confirm your account
+              </div>
+              <p className="text-green-700 pl-7">
+                We sent a confirmation link to <span className="font-medium">{email}</span>. Click the link in the email to activate your account before signing in.
+              </p>
             </div>
           )}
 

@@ -1,9 +1,14 @@
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import { AuthProvider, useAuth } from './context/AuthContext';
+import { PlanProvider } from './context/PlanContext';
 import LoginPage from './pages/LoginPage';
 import RegisterPage from './pages/RegisterPage';
 import DashboardPage from './pages/DashboardPage';
 import ProfilePage from './pages/ProfilePage';
+import CropDetailPage from './pages/CropDetailPage';
+import AnalyticsDashboard from './pages/AnalyticsDashboard';
+import TrainingHubPage from './pages/TrainingHubPage';
+import AdminPage from './pages/AdminPage';
 
 // ─── Protected Route Guard ────────────────────────────────────────────────────
 const ProtectedRoute: React.FC<{ children: React.ReactNode }> = ({ children }) => {
@@ -13,12 +18,8 @@ const ProtectedRoute: React.FC<{ children: React.ReactNode }> = ({ children }) =
     return (
       <div className="min-h-screen bg-agri-bg flex items-center justify-center">
         <div className="flex flex-col items-center gap-4">
-          <div className="h-12 w-12 rounded-2xl bg-agri-dark flex items-center justify-center animate-pulse">
-            <svg className="h-7 w-7 text-agri-lime" viewBox="0 0 24 24" fill="currentColor">
-              <path d="M17 8C8 10 5.9 16.17 3.82 21c-.19.41.39.81.74.53l1.1-.87C7 19.5 8.5 19 10 19c4 0 5-2.5 8-2.5s4 2.5 7 2.5c.55 0 1-.45 1-1 0-4.5-5-10-9-10z" />
-            </svg>
-          </div>
-          <p className="text-agri-subtext text-sm font-medium animate-pulse">Loading YEATI…</p>
+          <img src="/logo.png" alt="AgriPiyasa" className="h-16 w-auto object-contain animate-pulse" />
+          <p className="text-agri-subtext text-sm font-medium animate-pulse">Loading AgriPiyasa…</p>
         </div>
       </div>
     );
@@ -28,7 +29,27 @@ const ProtectedRoute: React.FC<{ children: React.ReactNode }> = ({ children }) =
   return <>{children}</>;
 };
 
-// ─── Public-only Route Guard (redirect to dashboard if already logged in) ─────
+// ─── Admin Route Guard ────────────────────────────────────────────────────────
+const AdminRoute: React.FC<{ children: React.ReactNode }> = ({ children }) => {
+  const { user, profile, loading } = useAuth();
+
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-agri-bg flex items-center justify-center">
+        <div className="flex flex-col items-center gap-4">
+          <img src="/logo.png" alt="AgriPiyasa" className="h-16 w-auto object-contain animate-pulse" />
+          <p className="text-agri-subtext text-sm font-medium animate-pulse">Loading AgriPiyasa…</p>
+        </div>
+      </div>
+    );
+  }
+
+  if (!user) return <Navigate to="/login" replace />;
+  if (profile && profile.role !== 'ADMIN') return <Navigate to="/dashboard" replace />;
+  return <>{children}</>;
+};
+
+// ─── Public-only Route Guard ──────────────────────────────────────────────────
 const PublicRoute: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const { user, loading } = useAuth();
 
@@ -36,12 +57,8 @@ const PublicRoute: React.FC<{ children: React.ReactNode }> = ({ children }) => {
     return (
       <div className="min-h-screen bg-agri-bg flex items-center justify-center">
         <div className="flex flex-col items-center gap-4">
-          <div className="h-12 w-12 rounded-2xl bg-agri-dark flex items-center justify-center animate-pulse">
-            <svg className="h-7 w-7 text-agri-lime" viewBox="0 0 24 24" fill="currentColor">
-              <path d="M17 8C8 10 5.9 16.17 3.82 21c-.19.41.39.81.74.53l1.1-.87C7 19.5 8.5 19 10 19c4 0 5-2.5 8-2.5s4 2.5 7 2.5c.55 0 1-.45 1-1 0-4.5-5-10-9-10z" />
-            </svg>
-          </div>
-          <p className="text-agri-subtext text-sm font-medium animate-pulse">Loading YEATI…</p>
+          <img src="/logo.png" alt="AgriPiyasa" className="h-16 w-auto object-contain animate-pulse" />
+          <p className="text-agri-subtext text-sm font-medium animate-pulse">Loading AgriPiyasa…</p>
         </div>
       </div>
     );
@@ -56,44 +73,28 @@ import React from 'react';
 
 const App = () => (
   <AuthProvider>
-    <BrowserRouter>
-      <Routes>
-        <Route
-          path="/login"
-          element={
-            <PublicRoute>
-              <LoginPage />
-            </PublicRoute>
-          }
-        />
-        <Route
-          path="/register"
-          element={
-            <PublicRoute>
-              <RegisterPage />
-            </PublicRoute>
-          }
-        />
-        <Route
-          path="/dashboard"
-          element={
-            <ProtectedRoute>
-              <DashboardPage />
-            </ProtectedRoute>
-          }
-        />
-        <Route
-          path="/profile"
-          element={
-            <ProtectedRoute>
-              <ProfilePage />
-            </ProtectedRoute>
-          }
-        />
-        {/* Default: redirect to dashboard (will bounce to login if not authed) */}
-        <Route path="*" element={<Navigate to="/dashboard" replace />} />
-      </Routes>
-    </BrowserRouter>
+    <PlanProvider>
+      <BrowserRouter>
+        <Routes>
+          {/* Public routes */}
+          <Route path="/login" element={<PublicRoute><LoginPage /></PublicRoute>} />
+          <Route path="/register" element={<PublicRoute><RegisterPage /></PublicRoute>} />
+
+          {/* Farmer flow routes */}
+          <Route path="/dashboard" element={<ProtectedRoute><DashboardPage /></ProtectedRoute>} />
+          <Route path="/profile" element={<ProtectedRoute><ProfilePage /></ProtectedRoute>} />
+          <Route path="/crop-detail" element={<ProtectedRoute><CropDetailPage /></ProtectedRoute>} />
+          <Route path="/analytics" element={<ProtectedRoute><AnalyticsDashboard /></ProtectedRoute>} />
+          <Route path="/training-hub" element={<ProtectedRoute><TrainingHubPage /></ProtectedRoute>} />
+
+          {/* Admin routes */}
+          <Route path="/admin" element={<AdminRoute><AdminPage /></AdminRoute>} />
+
+          {/* Default: redirect to dashboard */}
+          <Route path="*" element={<Navigate to="/dashboard" replace />} />
+        </Routes>
+      </BrowserRouter>
+    </PlanProvider>
   </AuthProvider>
 );
 

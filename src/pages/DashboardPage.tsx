@@ -1,8 +1,12 @@
 import React, { useEffect, useState, useCallback } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, Link, useLocation } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
+import { usePlan, type PlanCrop } from '../context/PlanContext';
 import { api } from '../api/axios';
 import Button from '../components/ui/Button';
+import { Salad, Apple, Leaf, Wheat, Sprout, Droplets, MapPin } from 'lucide-react';
+import { getCropImageUrl } from '../utils/cropImages';
+import { getEnrichedLocation } from '../utils/districtData';
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 interface Location {
@@ -14,29 +18,15 @@ interface Location {
   avg_annual_rainfall_mm: number | null;
 }
 
-interface Crop {
-  id: string;
-  name_en: string;
-  name_si: string;
-  category: string;
-  growing_cycle_duration_days: number;
-  min_soil_ph: number;
-  max_soil_ph: number;
-  preferred_soil_type: string;
-  min_temp_celsius: number;
-  max_temp_celsius: number;
-  water_requirement_summary: string | null;
-  image_url: string | null;
-  suitability?: string;
-}
+type Crop = PlanCrop;
 
 // ─── Category badge config ────────────────────────────────────────────────────
-const categoryConfig: Record<string, { label: string; color: string; icon: string }> = {
-  VEGETABLE:  { label: 'Vegetable',  color: 'bg-emerald-100 text-emerald-700 border-emerald-200', icon: '🥦' },
-  FRUIT:      { label: 'Fruit',      color: 'bg-orange-100  text-orange-700  border-orange-200',  icon: '🍎' },
-  CASH_CROP:  { label: 'Cash Crop',  color: 'bg-yellow-100  text-yellow-700  border-yellow-200',  icon: '🌿' },
-  GRAIN:      { label: 'Grain',      color: 'bg-amber-100   text-amber-700   border-amber-200',   icon: '🌾' },
-  HERB_SPICE: { label: 'Herb/Spice', color: 'bg-purple-100  text-purple-700  border-purple-200',  icon: '🌱' },
+const categoryConfig: Record<string, { label: string; color: string; icon: React.ReactNode }> = {
+  VEGETABLE:  { label: 'Vegetable',  color: 'bg-emerald-100 text-emerald-700 border-emerald-200', icon: <Salad className="h-10 w-10 text-emerald-600" /> },
+  FRUIT:      { label: 'Fruit',      color: 'bg-orange-100  text-orange-700  border-orange-200',  icon: <Apple className="h-10 w-10 text-orange-600" /> },
+  CASH_CROP:  { label: 'Cash Crop',  color: 'bg-yellow-100  text-yellow-700  border-yellow-200',  icon: <Leaf className="h-10 w-10 text-yellow-600" /> },
+  GRAIN:      { label: 'Grain',      color: 'bg-amber-100   text-amber-700   border-amber-200',   icon: <Wheat className="h-10 w-10 text-amber-600" /> },
+  HERB_SPICE: { label: 'Herb/Spice', color: 'bg-purple-100  text-purple-700  border-purple-200',  icon: <Sprout className="h-10 w-10 text-purple-600" /> },
 };
 
 const suitabilityConfig: Record<string, { label: string; dot: string }> = {
@@ -61,8 +51,9 @@ const SkeletonCard = () => (
 );
 
 const CropCard: React.FC<{ crop: Crop }> = ({ crop }) => {
-  const cat = categoryConfig[crop.category] ?? { label: crop.category, color: 'bg-gray-100 text-gray-600 border-gray-200', icon: '🌱' };
+  const cat = categoryConfig[crop.category] ?? { label: crop.category, color: 'bg-gray-100 text-gray-600 border-gray-200', icon: <Sprout className="h-10 w-10 text-agri-primary" /> };
   const suit = crop.suitability ? suitabilityConfig[crop.suitability] : null;
+  const cropImg = getCropImageUrl(crop.name_en, crop.image_url);
 
   return (
     <div
@@ -72,9 +63,9 @@ const CropCard: React.FC<{ crop: Crop }> = ({ crop }) => {
     >
       {/* Image area */}
       <div className="relative h-36 bg-gradient-to-br from-agri-bg to-agri-border flex items-center justify-center text-5xl overflow-hidden">
-        {crop.image_url ? (
+        {cropImg ? (
           <img
-            src={crop.image_url}
+            src={cropImg}
             alt={crop.name_en}
             className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
           />
@@ -127,9 +118,10 @@ const CropCard: React.FC<{ crop: Crop }> = ({ crop }) => {
         </div>
 
         {crop.water_requirement_summary && (
-          <p className="text-xs text-agri-subtext leading-relaxed line-clamp-2">
-            💧 {crop.water_requirement_summary}
-          </p>
+          <div className="flex items-start gap-1.5 text-xs text-agri-subtext leading-relaxed line-clamp-2">
+            <Droplets className="h-3.5 w-3.5 text-blue-500 flex-shrink-0 mt-0.5" />
+            <span>{crop.water_requirement_summary}</span>
+          </div>
         )}
       </div>
     </div>
@@ -140,10 +132,12 @@ const CropCard: React.FC<{ crop: Crop }> = ({ crop }) => {
 
 const DashboardPage: React.FC = () => {
   const navigate = useNavigate();
+  const location = useLocation();
   const { user, profile, signOut } = useAuth();
+  const { selectedLocation: planLocation, setSelectedCrop, setSelectedLocation: setPlanLocation, setCurrentPhase } = usePlan();
 
   const [locations, setLocations] = useState<Location[]>([]);
-  const [selectedLocation, setSelectedLocation] = useState<Location | null>(null);
+  const [selectedLocation, setSelectedLocation] = useState<Location | null>(() => planLocation ? getEnrichedLocation(planLocation) : null);
   const [crops, setCrops] = useState<Crop[]>([]);
   const [loadingLocations, setLoadingLocations] = useState(true);
   const [loadingCrops, setLoadingCrops] = useState(false);
@@ -153,14 +147,63 @@ const DashboardPage: React.FC = () => {
   const [locationsError, setLocationsError] = useState<string | null>(null);
   const [cropsError, setCropsError] = useState<string | null>(null);
 
-  // Fetch locations
+  const enrichedLocation = getEnrichedLocation(selectedLocation);
+
+  // Fetch locations — try /locations API, fall back to deriving unique districts from suitability data
   useEffect(() => {
     const fetchLocations = async () => {
       try {
         const res = await api.get<Location[]>('/locations');
-        setLocations(res.data);
+        if (res.data.length > 0) {
+          const enriched = res.data.map((l) => getEnrichedLocation(l)!);
+          setLocations(enriched);
+          setSelectedLocation((prev) => {
+            if (prev) return getEnrichedLocation(prev);
+            if (planLocation) return getEnrichedLocation(planLocation);
+            const defaultLoc = enriched.find((l) => l.district_name.toLowerCase() === 'badulla') ?? enriched[0];
+            return defaultLoc ?? null;
+          });
+        } else {
+          // Locations table empty — derive unique districts from suitability table via dedicated endpoint
+          const distRes = await api.get<{ district: string; province?: string }[]>('/locations/districts');
+          const derived: Location[] = distRes.data.map((d) => getEnrichedLocation({
+            id: d.district,
+            district_name: d.district,
+            province: d.province ?? 'Sri Lanka',
+            agro_ecological_zone: '',
+            default_soil_type: null,
+            avg_annual_rainfall_mm: null,
+          })!);
+          setLocations(derived);
+          setSelectedLocation((prev) => {
+            if (prev) return getEnrichedLocation(prev);
+            if (planLocation) return getEnrichedLocation(planLocation);
+            const defaultLoc = derived.find((l) => l.district_name.toLowerCase() === 'badulla') ?? derived[0];
+            return defaultLoc ?? null;
+          });
+        }
       } catch {
-        setLocationsError('Could not load locations. Please try again.');
+        // Last resort: get districts from suitability
+        try {
+          const distRes = await api.get<{ district: string }[]>('/locations/districts');
+          const derived: Location[] = distRes.data.map((d) => getEnrichedLocation({
+            id: d.district,
+            district_name: d.district,
+            province: 'Sri Lanka',
+            agro_ecological_zone: '',
+            default_soil_type: null,
+            avg_annual_rainfall_mm: null,
+          })!);
+          setLocations(derived);
+          setSelectedLocation((prev) => {
+            if (prev) return getEnrichedLocation(prev);
+            if (planLocation) return getEnrichedLocation(planLocation);
+            const defaultLoc = derived.find((l) => l.district_name.toLowerCase() === 'badulla') ?? derived[0];
+            return defaultLoc ?? null;
+          });
+        } catch {
+          setLocationsError('Could not load locations. Please try again.');
+        }
       } finally {
         setLoadingLocations(false);
       }
@@ -168,12 +211,23 @@ const DashboardPage: React.FC = () => {
     fetchLocations();
   }, []);
 
-  // Fetch crops when location changes
-  const fetchCrops = useCallback(async (locationId: string) => {
+  // Fetch crops when location changes — use district name since locations table may be empty
+  const fetchCrops = useCallback(async (location: Location) => {
     setLoadingCrops(true);
     setCropsError(null);
     try {
-      const res = await api.get<Crop[]>(`/crops/by-location/${locationId}`);
+      // Try by location ID first; fall back to district name
+      let res;
+      if (location.id && location.id !== location.district_name) {
+        try {
+          res = await api.get<Crop[]>(`/crops/by-location/${location.id}`);
+          if (res.data.length === 0) throw new Error('empty');
+        } catch {
+          res = await api.get<Crop[]>(`/crops/by-district/${encodeURIComponent(location.district_name)}`);
+        }
+      } else {
+        res = await api.get<Crop[]>(`/crops/by-district/${encodeURIComponent(location.district_name)}`);
+      }
       setCrops(res.data);
     } catch {
       setCropsError('Could not load crop recommendations. Please try again.');
@@ -183,14 +237,37 @@ const DashboardPage: React.FC = () => {
   }, []);
 
   useEffect(() => {
-    if (selectedLocation) {
-      fetchCrops(selectedLocation.id);
+    if (enrichedLocation) {
+      fetchCrops(enrichedLocation);
     }
-  }, [selectedLocation, fetchCrops]);
+  }, [enrichedLocation?.district_name, fetchCrops]);
 
   const handleSignOut = async () => {
     await signOut();
     navigate('/login');
+  };
+
+  // Sync location selection with PlanContext
+  const handleSelectLocation = (loc: Location) => {
+    const enriched = getEnrichedLocation(loc) ?? loc;
+    setSelectedLocation(enriched);
+    setPlanLocation(enriched);
+    setLocationSearch('');
+    setShowLocationDropdown(false);
+  };
+
+  const handleClearLocation = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    setSelectedLocation(null);
+    setPlanLocation(null);
+    setCrops([]);
+    setLocationSearch('');
+  };
+
+  const handleCropClick = (crop: Crop) => {
+    setSelectedCrop(crop);
+    setCurrentPhase(2);
+    navigate('/crop-detail');
   };
 
   const filteredLocations = locations.filter(
@@ -212,30 +289,35 @@ const DashboardPage: React.FC = () => {
       <header className="sticky top-0 z-40 bg-white/80 backdrop-blur-xl border-b border-agri-border shadow-sm">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between gap-4">
           {/* Logo */}
-          <div className="flex items-center gap-3 flex-shrink-0">
-            <div className="h-8 w-8 rounded-xl bg-agri-dark flex items-center justify-center">
-              <svg className="h-5 w-5 text-agri-lime" viewBox="0 0 24 24" fill="currentColor">
-                <path d="M17 8C8 10 5.9 16.17 3.82 21c-.19.41.39.81.74.53l1.1-.87C7 19.5 8.5 19 10 19c4 0 5-2.5 8-2.5s4 2.5 7 2.5c.55 0 1-.45 1-1 0-4.5-5-10-9-10z" />
-              </svg>
-            </div>
-            <span className="text-agri-dark text-lg font-bold tracking-tight">YEATI</span>
+          <div className="flex items-center gap-2.5 flex-shrink-0">
+            <img src="/logo.png" alt="AgriPiyasa Logo" className="h-9 w-auto object-contain" />
+            <span className="text-agri-dark text-xl font-bold tracking-tight">Agri පියස</span>
           </div>
 
-          {/* Phase Steps (desktop) */}
-          <nav className="hidden md:flex items-center gap-1 text-xs font-medium">
-            {['Location & Crops', 'Crop Profile', 'Resources', 'Analytics', 'Training Hub'].map((step, i) => (
-              <React.Fragment key={step}>
-                <span
-                  className={`px-3 py-1.5 rounded-lg transition-colors ${i === 0
-                    ? 'bg-agri-primary text-white'
-                    : 'text-agri-subtext hover:text-agri-text hover:bg-agri-bg cursor-not-allowed opacity-50'
-                    }`}
+          {/* Main Navigation Links */}
+          <nav className="hidden md:flex items-center gap-1 text-xs font-semibold">
+            {[
+              { label: 'Location & Crops', path: '/dashboard' },
+              { label: 'Crop Profile', path: '/crop-detail' },
+              { label: 'Resources', path: '/crop-detail#resources' },
+              { label: 'Analytics', path: '/analytics' },
+              { label: 'Training Hub', path: '/training-hub' },
+            ].map((item) => {
+              const isActive = location.pathname === item.path || (item.path.startsWith('/crop-detail') && location.pathname === '/crop-detail');
+              return (
+                <Link
+                  key={item.label}
+                  to={item.path}
+                  className={`px-3 py-1.5 rounded-xl transition-all duration-200 ${
+                    isActive
+                      ? 'bg-agri-primary text-white shadow-sm font-semibold'
+                      : 'text-agri-subtext hover:text-agri-text hover:bg-agri-bg'
+                  }`}
                 >
-                  {step}
-                </span>
-                {i < 4 && <span className="text-agri-border">›</span>}
-              </React.Fragment>
-            ))}
+                  {item.label}
+                </Link>
+              );
+            })}
           </nav>
 
           {/* User menu */}
@@ -276,6 +358,18 @@ const DashboardPage: React.FC = () => {
                     </svg>
                     My Profile
                   </button>
+                  {profile?.role === 'ADMIN' && (
+                    <button
+                      id="admin-panel-menu-item"
+                      className="w-full flex items-center gap-2.5 px-3 py-2 text-sm text-agri-text hover:bg-agri-bg rounded-xl transition-colors"
+                      onClick={() => { setUserMenuOpen(false); navigate('/admin'); }}
+                    >
+                      <svg className="h-4 w-4 text-agri-subtext" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2}>
+                        <path d="M12 20h9" /><path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z" />
+                      </svg>
+                      Admin Panel
+                    </button>
+                  )}
                   <button
                     id="logout-menu-item"
                     onClick={handleSignOut}
@@ -304,18 +398,19 @@ const DashboardPage: React.FC = () => {
           <div className="absolute bottom-0 left-40 w-60 h-60 rounded-full bg-agri-lime/10 blur-3xl translate-y-1/2" />
           <div className="relative z-10 flex flex-col md:flex-row md:items-center md:justify-between gap-4">
             <div>
-              <p className="text-agri-lime/80 text-sm font-medium mb-1">Phase 1 of 5</p>
               <h1 className="text-2xl lg:text-3xl font-bold text-white">
-                Hello, {profile?.full_name?.split(' ')[0] ?? 'Farmer'} 👋
+                Hello, {profile?.full_name?.split(' ')[0] ?? 'Farmer'}
               </h1>
               <p className="text-white/60 mt-2 text-sm max-w-lg">
                 Start by selecting your district below. We'll show you the best crops suited to your region's soil and climate.
               </p>
             </div>
-            <div className="flex-shrink-0 bg-white/10 border border-white/20 backdrop-blur-sm rounded-2xl px-5 py-4 text-center">
+            <div className="flex-shrink-0 bg-white/10 border border-white/20 backdrop-blur-sm rounded-2xl px-5 py-4 text-center min-w-[140px]">
               <p className="text-white/60 text-xs mb-1">Currently viewing</p>
-              <p className="text-white font-bold text-lg">{selectedLocation?.district_name ?? '—'}</p>
-              <p className="text-white/40 text-xs">{selectedLocation?.province ?? 'Select a location'}</p>
+              <p className="text-white font-bold text-lg">{enrichedLocation?.district_name ?? '—'}</p>
+              <p className="text-white/60 text-xs font-medium">
+                {enrichedLocation?.province ? (enrichedLocation.province.endsWith('Province') ? enrichedLocation.province : `${enrichedLocation.province} Province`) : 'Select a location'}
+              </p>
             </div>
           </div>
         </div>
@@ -356,7 +451,7 @@ const DashboardPage: React.FC = () => {
                   <input
                     id="location-search-input"
                     type="text"
-                    placeholder={selectedLocation ? selectedLocation.district_name : 'Search districts…'}
+                    placeholder={enrichedLocation ? enrichedLocation.district_name : 'Search districts…'}
                     value={locationSearch}
                     onChange={(e) => {
                       setLocationSearch(e.target.value);
@@ -371,9 +466,7 @@ const DashboardPage: React.FC = () => {
                     type="button"
                     onClick={(e) => {
                       e.stopPropagation();
-                      setSelectedLocation(null);
-                      setCrops([]);
-                      setLocationSearch('');
+                      handleClearLocation(e);
                     }}
                     className="text-agri-subtext hover:text-agri-text transition-colors"
                     aria-label="Clear location"
@@ -398,15 +491,11 @@ const DashboardPage: React.FC = () => {
                           <button
                             key={loc.id}
                             className={`w-full text-left px-4 py-3 hover:bg-agri-bg transition-colors flex items-center justify-between gap-2 ${selectedLocation?.id === loc.id ? 'bg-agri-primary/5' : ''}`}
-                            onClick={() => {
-                              setSelectedLocation(loc);
-                              setLocationSearch('');
-                              setShowLocationDropdown(false);
-                            }}
+                            onClick={() => handleSelectLocation(loc)}
                           >
                             <div>
                               <p className="text-sm font-semibold text-agri-text">{loc.district_name}</p>
-                              <p className="text-xs text-agri-subtext">{loc.province} · {loc.agro_ecological_zone}</p>
+                              <p className="text-xs text-agri-subtext">{loc.province} Province · {loc.agro_ecological_zone}</p>
                             </div>
                             {selectedLocation?.id === loc.id && (
                               <svg className="h-4 w-4 text-agri-primary flex-shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2.5}>
@@ -423,17 +512,28 @@ const DashboardPage: React.FC = () => {
             </div>
           )}
 
-          {/* Selected location detail card */}
-          {selectedLocation && (
+          {/* Selected location detail cards */}
+          {enrichedLocation && (
             <div className="mt-4 max-w-lg grid grid-cols-3 gap-3">
               {[
-                { label: 'Agro-Eco Zone', value: selectedLocation.agro_ecological_zone },
-                { label: 'Soil Type', value: selectedLocation.default_soil_type ?? 'Varied' },
-                { label: 'Avg Rainfall', value: selectedLocation.avg_annual_rainfall_mm ? `${selectedLocation.avg_annual_rainfall_mm} mm` : 'N/A' },
+                { 
+                  label: 'Agro-Eco Zone', 
+                  value: enrichedLocation.agro_ecological_zone || 'Intermediate Zone' 
+                },
+                { 
+                  label: 'Soil Type', 
+                  value: enrichedLocation.default_soil_type || 'Red-Yellow Podzolic' 
+                },
+                { 
+                  label: 'Avg Rainfall', 
+                  value: enrichedLocation.avg_annual_rainfall_mm 
+                    ? `${enrichedLocation.avg_annual_rainfall_mm.toLocaleString()} mm` 
+                    : '1,800 mm' 
+                },
               ].map(({ label, value }) => (
-                <div key={label} className="bg-white border border-agri-border rounded-xl p-3">
-                  <p className="text-[10px] text-agri-subtext uppercase tracking-wide font-medium">{label}</p>
-                  <p className="text-xs font-semibold text-agri-text mt-1">{value}</p>
+                <div key={label} className="bg-white border border-agri-border rounded-xl p-3 shadow-sm hover:border-agri-primary/30 transition-colors">
+                  <p className="text-[10px] text-agri-subtext uppercase tracking-wider font-semibold">{label}</p>
+                  <p className="text-xs font-bold text-agri-text mt-1 leading-snug">{value}</p>
                 </div>
               ))}
             </div>
@@ -474,7 +574,7 @@ const DashboardPage: React.FC = () => {
             {cropsError && (
               <div className="flex items-center gap-2.5 rounded-xl bg-red-50 border border-red-200 px-4 py-3 text-sm text-red-600">
                 {cropsError}
-                <Button variant="outline" size="sm" onClick={() => selectedLocation && fetchCrops(selectedLocation.id)}>
+                <Button variant="outline" size="sm" onClick={() => selectedLocation && fetchCrops(selectedLocation)}>
                   Retry
                 </Button>
               </div>
@@ -486,7 +586,9 @@ const DashboardPage: React.FC = () => {
               </div>
             ) : crops.length === 0 && !cropsError ? (
               <div className="flex flex-col items-center justify-center py-20 text-center space-y-3">
-                <div className="text-5xl">🌱</div>
+                <div className="h-16 w-16 rounded-3xl bg-agri-bg border border-agri-border flex items-center justify-center mx-auto text-agri-subtext">
+                  <Sprout className="h-8 w-8 text-agri-primary" />
+                </div>
                 <p className="text-agri-text font-semibold">No crops found for this location</p>
                 <p className="text-agri-subtext text-sm max-w-sm">
                   No crop–location suitability data is available yet. Try another district or check back later.
@@ -495,7 +597,9 @@ const DashboardPage: React.FC = () => {
             ) : (
               <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
                 {crops.map((crop) => (
-                  <CropCard key={crop.id} crop={crop} />
+                  <div key={crop.id} onClick={() => handleCropClick(crop)} className="cursor-pointer">
+                    <CropCard crop={crop} />
+                  </div>
                 ))}
               </div>
             )}
@@ -505,13 +609,13 @@ const DashboardPage: React.FC = () => {
         {/* Empty / initial state */}
         {!selectedLocation && !loadingCrops && (
           <div className="flex flex-col items-center justify-center py-24 text-center space-y-4">
-            <div className="h-20 w-20 rounded-3xl bg-agri-primary/10 flex items-center justify-center text-4xl">
-              🗺️
+            <div className="h-20 w-20 rounded-3xl bg-agri-primary/10 flex items-center justify-center text-agri-primary">
+              <MapPin className="h-10 w-10" />
             </div>
             <div className="space-y-2">
               <h3 className="text-lg font-bold text-agri-text">Pick your district to begin</h3>
               <p className="text-agri-subtext text-sm max-w-sm">
-                YEATI will match crops to your agro-ecological zone and display tailored recommendations.
+                AgriPiyasa will match crops to your agro-ecological zone and display tailored recommendations.
               </p>
             </div>
           </div>

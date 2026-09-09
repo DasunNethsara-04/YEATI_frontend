@@ -111,13 +111,9 @@ const ProfilePage: React.FC = () => {
             <ArrowLeftIcon />
             Dashboard
           </button>
-          <div className="flex items-center gap-2 ml-auto">
-            <div className="h-7 w-7 rounded-xl bg-agri-dark flex items-center justify-center">
-              <svg className="h-4 w-4 text-agri-lime" viewBox="0 0 24 24" fill="currentColor">
-                <path d="M17 8C8 10 5.9 16.17 3.82 21c-.19.41.39.81.74.53l1.1-.87C7 19.5 8.5 19 10 19c4 0 5-2.5 8-2.5s4 2.5 7 2.5c.55 0 1-.45 1-1 0-4.5-5-10-9-10z" />
-              </svg>
-            </div>
-            <span className="text-agri-dark text-base font-bold">YEATI</span>
+          <div className="flex items-center gap-2.5 ml-auto">
+            <img src="/logo.png" alt="AgriPiyasa Logo" className="h-8 w-auto object-contain" />
+            <span className="text-agri-dark text-base font-bold">Agri පියස</span>
           </div>
         </div>
       </header>

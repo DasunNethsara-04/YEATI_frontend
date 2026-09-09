@@ -125,18 +125,20 @@ const RegisterPage: React.FC = () => {
   return (
     <div className="min-h-screen flex bg-agri-bg">
       {/* ── Left Branding Panel ─── */}
-      <div className="hidden lg:flex lg:w-1/2 relative overflow-hidden bg-agri-dark flex-col justify-between p-12">
-        <div className="absolute top-0 right-0 w-96 h-96 rounded-full bg-agri-primary/20 blur-3xl -translate-y-1/2 translate-x-1/2" />
-        <div className="absolute bottom-0 left-0 w-80 h-80 rounded-full bg-agri-lime/10 blur-3xl translate-y-1/2 -translate-x-1/4" />
+      <div className="hidden lg:flex lg:w-1/2 relative overflow-hidden flex-col justify-between p-12 bg-agri-dark">
+        {/* Cover Image Background */}
+        <img
+          src="/home-cover-img.jpg"
+          alt="AgriPiyasa Cover"
+          className="absolute inset-0 w-full h-full object-cover object-center"
+        />
+        {/* Semi-transparent green overlay with subtle gradient */}
+        <div className="absolute inset-0 bg-gradient-to-b from-[#0B2E1B]/85 via-[#0F3822]/75 to-[#0B2E1B]/90" />
 
         {/* Logo */}
         <div className="relative z-10 flex items-center gap-3">
-          <div className="h-10 w-10 rounded-2xl bg-agri-primary flex items-center justify-center shadow-lg shadow-agri-primary/30">
-            <svg className="h-6 w-6 text-white" viewBox="0 0 24 24" fill="currentColor">
-              <path d="M17 8C8 10 5.9 16.17 3.82 21c-.19.41.39.81.74.53l1.1-.87C7 19.5 8.5 19 10 19c4 0 5-2.5 8-2.5s4 2.5 7 2.5c.55 0 1-.45 1-1 0-4.5-5-10-9-10z" />
-            </svg>
-          </div>
-          <span className="text-white text-2xl font-bold tracking-tight">YEATI</span>
+          <img src="/logo.png" alt="AgriPiyasa Logo" className="h-12 w-auto object-contain drop-shadow-md" />
+          <span className="text-white text-2xl font-bold tracking-tight">Agri පියස</span>
         </div>
 
         {/* Steps */}
@@ -152,12 +154,12 @@ const RegisterPage: React.FC = () => {
               { step: '03', title: 'Get financial insights', desc: 'Know your costs, revenue, and ROI before you plant.' },
             ].map(({ step, title, desc }) => (
               <div key={step} className="flex gap-4">
-                <div className="flex-shrink-0 h-8 w-8 rounded-full bg-agri-primary/20 border border-agri-primary/30 flex items-center justify-center">
+                <div className="flex-shrink-0 h-8 w-8 rounded-full bg-black/25 border border-white/20 flex items-center justify-center backdrop-blur-sm">
                   <span className="text-agri-lime text-xs font-bold">{step}</span>
                 </div>
                 <div>
                   <p className="text-white text-sm font-semibold">{title}</p>
-                  <p className="text-white/50 text-xs mt-0.5">{desc}</p>
+                  <p className="text-white/70 text-xs mt-0.5">{desc}</p>
                 </div>
               </div>
             ))}
@@ -165,7 +167,7 @@ const RegisterPage: React.FC = () => {
         </div>
 
         {/* Bottom note */}
-        <div className="relative z-10 flex items-center gap-2 text-white/40 text-xs">
+        <div className="relative z-10 flex items-center gap-2 text-white/60 text-xs">
           <svg className="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2}>
             <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z" />
           </svg>
@@ -177,13 +179,9 @@ const RegisterPage: React.FC = () => {
       <div className="flex-1 flex items-center justify-center p-6 lg:p-12">
         <div className="w-full max-w-md space-y-7">
           {/* Mobile logo */}
-          <div className="lg:hidden flex items-center gap-2">
-            <div className="h-9 w-9 rounded-xl bg-agri-primary flex items-center justify-center">
-              <svg className="h-5 w-5 text-white" viewBox="0 0 24 24" fill="currentColor">
-                <path d="M17 8C8 10 5.9 16.17 3.82 21c-.19.41.39.81.74.53l1.1-.87C7 19.5 8.5 19 10 19c4 0 5-2.5 8-2.5s4 2.5 7 2.5c.55 0 1-.45 1-1 0-4.5-5-10-9-10z" />
-              </svg>
-            </div>
-            <span className="text-agri-dark text-xl font-bold">YEATI</span>
+          <div className="lg:hidden flex items-center gap-2.5">
+            <img src="/logo.png" alt="AgriPiyasa Logo" className="h-9 w-auto object-contain" />
+            <span className="text-agri-dark text-xl font-bold">Agri පියස</span>
           </div>
 
           <div className="space-y-1">

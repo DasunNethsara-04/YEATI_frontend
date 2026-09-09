@@ -30,8 +30,6 @@ import {
   Calculator,
   ChevronDown,
   ChevronUp,
-  Layers,
-  Table,
 } from 'lucide-react';
 
 // ─── Formatters ───────────────────────────────────────────────────────────────
@@ -226,6 +224,7 @@ const AnalyticsDashboard: React.FC = () => {
     : [];
 
   const roiPositive = (result?.revenue.roi_pct ?? 0) >= 0;
+  const totalAcres = result?.area?.acres ?? (userInputs.area_unit === 'acres' ? userInputs.area_value : 1);
 
   // Price chart data — format week label
   const chartData = priceHistory.map((p) => ({
@@ -361,7 +360,7 @@ const AnalyticsDashboard: React.FC = () => {
 
             {/* Summary stat cards */}
             <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
-              <StatCard icon={<Coins className="h-5 w-5 text-agri-lime" />} label="Total OpEx" value={fmtLKR(result.opex.total_rs)} sub={`${result.area?.acres.toFixed(3)} acres`} accent />
+              <StatCard icon={<Coins className="h-5 w-5 text-agri-lime" />} label="Total OpEx" value={fmtLKR(result.opex.total_rs)} sub={`${totalAcres.toFixed(3)} acres`} accent />
               <StatCard icon={<Wheat className="h-5 w-5 text-emerald-600" />} label="Est. Yield" value={fmtKg(result.yield.estimated_kg)} sub={`${fmtKg(result.yield.avg_yield_per_acre)} / acre`} />
               <StatCard
                 icon={<TrendingUp className="h-5 w-5 text-blue-600" />}
@@ -684,11 +683,11 @@ const AnalyticsDashboard: React.FC = () => {
                         <div>
                           <p className="text-xs font-bold text-agri-primary">Your Cultivation Extent Conversions:</p>
                           <p className="text-sm font-semibold text-agri-text mt-0.5">
-                            {userInputs.area_value} {userInputs.area_unit} = {result.area?.acres.toFixed(3)} Acres = {(result.area?.acres * 160).toFixed(1)} Perches = {(result.area?.acres * 4).toFixed(2)} Roods = {(result.area?.acres * 4046.86).toFixed(1)} m²
+                            {userInputs.area_value} {userInputs.area_unit} = {totalAcres.toFixed(3)} Acres = {(totalAcres * 160).toFixed(1)} Perches = {(totalAcres * 4).toFixed(2)} Roods = {(totalAcres * 4046.86).toFixed(1)} m²
                           </p>
                         </div>
                         <span className="text-[11px] font-semibold bg-emerald-50 text-emerald-700 border border-emerald-200 px-3 py-1 rounded-lg">
-                          Standardized to {result.area?.acres.toFixed(3)} acres for calculation
+                          Standardized to {totalAcres.toFixed(3)} acres for calculation
                         </span>
                       </div>
                     </div>

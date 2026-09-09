@@ -99,6 +99,11 @@ export interface AnalyticsResult {
     harvest_date: string;
     growing_cycle_days: number;
   };
+  area?: {
+    value: number;
+    unit: string;
+    acres: number;
+  };
 }
 
 // Phase indices

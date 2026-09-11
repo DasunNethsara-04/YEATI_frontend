@@ -106,6 +106,58 @@ export interface AnalyticsResult {
   };
 }
 
+export interface PlanRecommendation {
+  crop_id: string;
+  crop_name: string;
+  crop_name_si?: string;
+  crop_name_ta?: string;
+  category?: string;
+  method_type: 'OPEN_FIELD' | 'HYDROPONICS' | 'ORGANIC';
+  suitability_level: string;
+  is_mvp_recommended: boolean;
+  reason_notes: string;
+  cost_per_acre: number;
+  avg_yield_per_acre: number;
+  growing_cycle_days: number;
+  max_affordable_land: {
+    acres: number;
+    perches: number;
+    roods: number;
+    sq_m: number;
+  };
+  evaluated_land: {
+    acres: number;
+    perches: number;
+    roods: number;
+    sq_m: number;
+  };
+  required_opex: number;
+  can_afford: boolean;
+  affordability_status: 'FULLY_AFFORDABLE' | 'MODERATE_SHORTFALL' | 'OVER_BUDGET';
+  capital_gap_lkr: number;
+  capital_surplus_lkr: number;
+  budget_coverage_pct: number;
+  advice: string;
+  projected_metrics: {
+    harvest_date: string;
+    estimated_yield_kg: number;
+    predicted_price_rs_per_kg: number;
+    gross_revenue_rs: number;
+    net_profit_rs: number;
+    roi_pct: number;
+    profit_margin_pct: number;
+  };
+}
+
+export interface RecommendationResponse {
+  district: string;
+  capital_lkr: number;
+  area_acres: number | null;
+  has_target_area: boolean;
+  total_evaluated: number;
+  recommendations: PlanRecommendation[];
+}
+
 // Phase indices
 export type Phase = 1 | 2 | 3 | 4 | 5;
 

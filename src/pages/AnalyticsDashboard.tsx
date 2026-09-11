@@ -258,11 +258,10 @@ const AnalyticsDashboard: React.FC = () => {
             {[
               { label: 'Location & Crops', path: '/dashboard' },
               { label: 'Crop Profile', path: '/crop-detail' },
-              { label: 'Resources', path: '/crop-detail#resources' },
               { label: 'Analytics', path: '/analytics' },
               { label: 'Training Hub', path: '/training-hub' },
             ].map((item) => {
-              const isActive = item.path === '/analytics';
+              const isActive = location.pathname === item.path || item.path === '/analytics';
               return (
                 <Link
                   key={item.label}

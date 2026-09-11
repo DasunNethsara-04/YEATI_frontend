@@ -9,7 +9,7 @@ import React, { useEffect, useState } from 'react';
 import { useNavigate, Link, useLocation } from 'react-router-dom';
 import { usePlan, type MethodBenchmark, type PlanCrop } from '../context/PlanContext';
 import { api } from '../api/axios';
-import { Wheat, Droplets, Leaf, Sprout, Calendar, FlaskConical, Thermometer, Bug, Lightbulb } from 'lucide-react';
+import { Wheat, Droplets, Leaf, Sprout, Calendar, FlaskConical, Thermometer, Bug, Lightbulb, AlertTriangle, ShieldCheck, Scale } from 'lucide-react';
 import { getCropImageUrl } from '../utils/cropImages';
 
 // ─── Method config ────────────────────────────────────────────────────────────
@@ -150,6 +150,53 @@ const CropDetailPage: React.FC = () => {
   const [methods, setMethods] = useState<MethodBenchmark[]>([]);
   const [loadingMethods, setLoadingMethods] = useState(true);
   const [methodsError, setMethodsError] = useState<string | null>(null);
+
+  // Unit conversion helper
+  const toAcres = (val: number, unit: string) => {
+    switch (unit) {
+      case 'perches': return val / 160;
+      case 'roods': return val / 4;
+      case 'sq_m': return val / 4046.86;
+      case 'sq_ft': return val / 43560;
+      case 'acres':
+      default: return val;
+    }
+  };
+
+  const costPerAcre = selectedMethod?.total_cost_rs_per_acre || 0;
+  const currentAcres = toAcres(userInputs.area_value || 0, userInputs.area_unit);
+  const requiredOpex = costPerAcre * currentAcres;
+  const rawMaxAffordableAcres = costPerAcre > 0 && userInputs.capital_lkr > 0
+    ? userInputs.capital_lkr / costPerAcre
+    : 0;
+
+  // Safe floor helper ensuring requiredOpex strictly <= capital_lkr
+  const getSafeFloorValue = () => {
+    switch (userInputs.area_unit) {
+      case 'perches':
+        return Math.max(1, Math.floor(rawMaxAffordableAcres * 160));
+      case 'roods':
+        return Math.max(0.1, Math.floor(rawMaxAffordableAcres * 4 * 10) / 10);
+      case 'sq_m':
+        return Math.max(10, Math.floor(rawMaxAffordableAcres * 4046.86));
+      case 'sq_ft':
+        return Math.max(100, Math.floor(rawMaxAffordableAcres * 43560));
+      case 'acres':
+      default: {
+        const f2 = Math.floor(rawMaxAffordableAcres * 100) / 100;
+        if (f2 > 0 && f2 < currentAcres) return f2;
+        return Math.floor(rawMaxAffordableAcres * 1000) / 1000;
+      }
+    }
+  };
+
+  const safeOptimizedValue = getSafeFloorValue();
+  const safeAcresDisplay = Math.floor(rawMaxAffordableAcres * 100) / 100;
+  const safePerchesDisplay = Math.floor(rawMaxAffordableAcres * 160);
+  const budgetGap = Math.max(0, requiredOpex - userInputs.capital_lkr);
+  // Avoid floating point penny noise (< Rs. 10)
+  const isOverBudget = userInputs.capital_lkr > 0 && budgetGap >= 10;
+  const budgetSurplus = Math.max(0, userInputs.capital_lkr - requiredOpex);
 
   // Check URL query param ?crop_id=...
   useEffect(() => {
@@ -311,11 +358,10 @@ const CropDetailPage: React.FC = () => {
             {[
               { label: 'Location & Crops', path: '/dashboard' },
               { label: 'Crop Profile', path: '/crop-detail' },
-              { label: 'Resources', path: '/crop-detail#resources' },
               { label: 'Analytics', path: '/analytics' },
               { label: 'Training Hub', path: '/training-hub' },
             ].map((item) => {
-              const isActive = (item.label === 'Crop Profile' || item.label === 'Resources') && location.pathname === '/crop-detail';
+              const isActive = location.pathname === item.path;
               return (
                 <Link
                   key={item.label}
@@ -510,6 +556,58 @@ const CropDetailPage: React.FC = () => {
                   </div>
                 </div>
               </div>
+
+              {/* Smart Budget & Land Recommendation Helper */}
+              {selectedMethod && userInputs.capital_lkr > 0 && (
+                <div className={`rounded-2xl p-4 border text-xs space-y-2.5 transition-all ${
+                  isOverBudget
+                    ? 'bg-amber-50/80 border-amber-300 text-amber-900'
+                    : 'bg-emerald-50/80 border-emerald-300 text-emerald-900'
+                }`}>
+                  <div className="flex items-center justify-between font-bold">
+                    <span className="flex items-center gap-1.5">
+                      {isOverBudget ? (
+                        <AlertTriangle className="h-4 w-4 text-amber-600 flex-shrink-0" />
+                      ) : (
+                        <ShieldCheck className="h-4 w-4 text-emerald-600 flex-shrink-0" />
+                      )}
+                      {isOverBudget ? 'Over-Investment Alert' : 'Cultivation Plan Fully Funded'}
+                    </span>
+                    <span className="text-[11px] font-semibold">
+                      Required: Rs. {Math.round(requiredOpex).toLocaleString()}
+                    </span>
+                  </div>
+
+                  {isOverBudget ? (
+                    <>
+                      <p className="text-[11px] text-amber-800 leading-relaxed">
+                        Cultivating <strong>{userInputs.area_value} {userInputs.area_unit}</strong> requires <strong>Rs. {Math.round(requiredOpex).toLocaleString()}</strong>, which exceeds your budget by <strong>Rs. {Math.round(budgetGap).toLocaleString()}</strong>.
+                        Cultivating beyond your capital risks debt or running out of inputs mid-season.
+                      </p>
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setUserInputs({
+                            ...userInputs,
+                            area_value: safeOptimizedValue,
+                          });
+                        }}
+                        className="w-full flex items-center justify-center gap-1.5 bg-amber-600 hover:bg-amber-700 text-white font-bold py-2.5 px-3 rounded-xl transition-colors text-xs shadow-sm cursor-pointer active:scale-[0.99]"
+                      >
+                        <Scale className="h-3.5 w-3.5" />
+                        Optimize to Safe Land Size ({safeOptimizedValue} {userInputs.area_unit} / {safePerchesDisplay} Perches)
+                      </button>
+                    </>
+                  ) : (
+                    <div className="flex items-center justify-between text-[11px] text-emerald-800">
+                      <span>Budget covers 100% of cultivation with <strong>Rs. {Math.round(budgetSurplus).toLocaleString()}</strong> reserve remaining.</span>
+                      <span className="font-semibold text-emerald-900 whitespace-nowrap ml-2">
+                        Max safe: {safeAcresDisplay} ac
+                      </span>
+                    </div>
+                  )}
+                </div>
+              )}
 
               {/* Proceed button */}
               {(!userInputs.capital_lkr || userInputs.capital_lkr <= 0) && (

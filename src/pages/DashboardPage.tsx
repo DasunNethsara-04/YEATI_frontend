@@ -7,6 +7,8 @@ import Button from '../components/ui/Button';
 import { Salad, Apple, Leaf, Wheat, Sprout, Droplets, MapPin } from 'lucide-react';
 import { getCropImageUrl } from '../utils/cropImages';
 import { getEnrichedLocation } from '../utils/districtData';
+import { SmartRecommendationSection } from '../components/SmartRecommendationSection';
+import { type PlanRecommendation } from '../context/PlanContext';
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 interface Location {
@@ -134,7 +136,15 @@ const DashboardPage: React.FC = () => {
   const navigate = useNavigate();
   const location = useLocation();
   const { user, profile, signOut } = useAuth();
-  const { selectedLocation: planLocation, setSelectedCrop, setSelectedLocation: setPlanLocation, setCurrentPhase } = usePlan();
+  const {
+    selectedLocation: planLocation,
+    setSelectedCrop,
+    setSelectedLocation: setPlanLocation,
+    setSelectedMethod,
+    userInputs,
+    setUserInputs,
+    setCurrentPhase,
+  } = usePlan();
 
   const [locations, setLocations] = useState<Location[]>([]);
   const [selectedLocation, setSelectedLocation] = useState<Location | null>(() => planLocation ? getEnrichedLocation(planLocation) : null);
@@ -247,6 +257,41 @@ const DashboardPage: React.FC = () => {
     navigate('/login');
   };
 
+  // Adopt a recommended plan with safe land extent
+  const handleAdoptPlan = async (rec: PlanRecommendation) => {
+    try {
+      // 1. Fetch full crop details
+      const cropRes = await api.get<Crop>(`/crops/${rec.crop_id}`);
+      setSelectedCrop(cropRes.data);
+
+      // 2. Fetch and match cultivation method
+      const methodsRes = await api.get(`/crops/${rec.crop_id}/methods`);
+      const methodsData = methodsRes.data || [];
+      const matched = methodsData.find((m: any) => m.method_type === rec.method_type) || methodsData[0];
+      if (matched) {
+        setSelectedMethod(matched);
+      }
+
+      // 3. Set safe land area
+      const safeAcres = rec.can_afford
+        ? (userInputs.area_unit === 'acres' && userInputs.area_value > 0 ? userInputs.area_value : rec.evaluated_land.acres)
+        : rec.max_affordable_land.acres;
+
+      setUserInputs({
+        ...userInputs,
+        capital_lkr: userInputs.capital_lkr || 250000,
+        area_value: Number(safeAcres.toFixed(2)),
+        area_unit: 'acres',
+      });
+
+      setCurrentPhase(3);
+      navigate('/crop-detail');
+    } catch (e) {
+      console.error('Failed to adopt plan:', e);
+      navigate('/crop-detail');
+    }
+  };
+
   // Sync location selection with PlanContext
   const handleSelectLocation = (loc: Location) => {
     const enriched = getEnrichedLocation(loc) ?? loc;
@@ -299,11 +344,10 @@ const DashboardPage: React.FC = () => {
             {[
               { label: 'Location & Crops', path: '/dashboard' },
               { label: 'Crop Profile', path: '/crop-detail' },
-              { label: 'Resources', path: '/crop-detail#resources' },
               { label: 'Analytics', path: '/analytics' },
               { label: 'Training Hub', path: '/training-hub' },
             ].map((item) => {
-              const isActive = location.pathname === item.path || (item.path.startsWith('/crop-detail') && location.pathname === '/crop-detail');
+              const isActive = location.pathname === item.path;
               return (
                 <Link
                   key={item.label}
@@ -539,6 +583,16 @@ const DashboardPage: React.FC = () => {
             </div>
           )}
         </section>
+
+        {/* ── Smart Capital & Land Recommendation Section ── */}
+        {enrichedLocation && (
+          <SmartRecommendationSection
+            districtName={enrichedLocation.district_name}
+            userInputs={userInputs}
+            setUserInputs={setUserInputs}
+            onAdoptPlan={handleAdoptPlan}
+          />
+        )}
 
         {/* ── Crop Recommendations ─────────────────────────────────────── */}
         {(selectedLocation || loadingCrops) && (

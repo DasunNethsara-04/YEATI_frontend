@@ -181,6 +181,7 @@ const AnalyticsDashboard: React.FC = () => {
             <nav className="flex items-center gap-1.5 text-xs font-semibold">
               <Link to="/dashboard" className="px-3 py-1.5 rounded-xl text-agri-subtext hover:text-agri-text">Location & Crops</Link>
               <Link to="/crop-detail" className="px-3 py-1.5 rounded-xl text-agri-subtext hover:text-agri-text">Crop Profile</Link>
+              <Link to="/farming-schedule" className="px-3 py-1.5 rounded-xl text-agri-subtext hover:text-agri-text">Daily Schedule</Link>
               <Link to="/analytics" className="px-3 py-1.5 rounded-xl bg-agri-primary text-white shadow-sm font-semibold">Analytics</Link>
               <Link to="/training-hub" className="px-3 py-1.5 rounded-xl text-agri-subtext hover:text-agri-text">Training Hub</Link>
             </nav>
@@ -258,10 +259,11 @@ const AnalyticsDashboard: React.FC = () => {
             {[
               { label: 'Location & Crops', path: '/dashboard' },
               { label: 'Crop Profile', path: '/crop-detail' },
+              { label: 'Daily Schedule', path: '/farming-schedule' },
               { label: 'Analytics', path: '/analytics' },
               { label: 'Training Hub', path: '/training-hub' },
             ].map((item) => {
-              const isActive = location.pathname === item.path || item.path === '/analytics';
+              const isActive = location.pathname === item.path;
               return (
                 <Link
                   key={item.label}
@@ -707,14 +709,23 @@ const AnalyticsDashboard: React.FC = () => {
             <h3 className="text-xl font-bold text-white">Explore Agricultural Training</h3>
             <p className="text-white/60 text-sm mt-1">Find courses and certifications matched to your crop and farming method</p>
           </div>
-          <button
-            id="cta-training-hub"
-            onClick={() => { setCurrentPhase(5); navigate('/training-hub'); }}
-            className="relative z-10 flex-shrink-0 bg-white text-agri-dark font-bold text-sm px-6 py-3 rounded-xl
-              hover:bg-agri-lime transition-colors whitespace-nowrap"
-          >
-            View Courses →
-          </button>
+          <div className="relative z-10 flex flex-wrap items-center gap-3">
+            <button
+              onClick={() => navigate('/farming-schedule')}
+              className="bg-white/15 border border-white/20 text-white font-bold text-sm px-5 py-3 rounded-xl
+                hover:bg-white/25 transition-colors whitespace-nowrap flex items-center gap-2"
+            >
+              📅 Daily Schedule
+            </button>
+            <button
+              id="cta-training-hub"
+              onClick={() => { setCurrentPhase(5); navigate('/training-hub'); }}
+              className="bg-white text-agri-dark font-bold text-sm px-6 py-3 rounded-xl
+                hover:bg-agri-lime transition-colors whitespace-nowrap"
+            >
+              View Courses →
+            </button>
+          </div>
         </div>
       </main>
     </div>

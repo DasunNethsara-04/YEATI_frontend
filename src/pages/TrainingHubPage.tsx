@@ -288,10 +288,11 @@ const TrainingHubPage: React.FC = () => {
             {[
               { label: 'Location & Crops', path: '/dashboard' },
               { label: 'Crop Profile', path: '/crop-detail' },
+              { label: 'Daily Schedule', path: '/farming-schedule' },
               { label: 'Analytics', path: '/analytics' },
               { label: 'Training Hub', path: '/training-hub' },
             ].map((item) => {
-              const isActive = location.pathname === item.path || item.path === '/training-hub';
+              const isActive = location.pathname === item.path;
               return (
                 <Link
                   key={item.label}

@@ -281,6 +281,7 @@ const CropDetailPage: React.FC = () => {
             <nav className="flex items-center gap-1.5 text-xs font-semibold">
               <Link to="/dashboard" className="px-3 py-1.5 rounded-xl text-agri-subtext hover:text-agri-text">Location & Crops</Link>
               <Link to="/crop-detail" className="px-3 py-1.5 rounded-xl bg-agri-primary text-white shadow-sm font-semibold">Crop Profile</Link>
+              <Link to="/farming-schedule" className="px-3 py-1.5 rounded-xl text-agri-subtext hover:text-agri-text">Daily Schedule</Link>
               <Link to="/analytics" className="px-3 py-1.5 rounded-xl text-agri-subtext hover:text-agri-text">Analytics</Link>
               <Link to="/training-hub" className="px-3 py-1.5 rounded-xl text-agri-subtext hover:text-agri-text">Training Hub</Link>
             </nav>
@@ -358,6 +359,7 @@ const CropDetailPage: React.FC = () => {
             {[
               { label: 'Location & Crops', path: '/dashboard' },
               { label: 'Crop Profile', path: '/crop-detail' },
+              { label: 'Daily Schedule', path: '/farming-schedule' },
               { label: 'Analytics', path: '/analytics' },
               { label: 'Training Hub', path: '/training-hub' },
             ].map((item) => {
@@ -479,6 +481,26 @@ const CropDetailPage: React.FC = () => {
                       onClick={() => setSelectedMethod(m)}
                     />
                   ))}
+                </div>
+              )}
+
+              {selectedMethod && (
+                <div className="mt-4 bg-emerald-50/90 border border-emerald-200 rounded-2xl p-4 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
+                  <div>
+                    <span className="text-[10px] font-bold uppercase tracking-wider text-emerald-800 bg-emerald-100/80 px-2 py-0.5 rounded-md">
+                      Field Activity Planner
+                    </span>
+                    <p className="text-xs font-semibold text-emerald-950 mt-1">
+                      Need a day-by-day cultivation calendar for {crop.name_en} ({selectedMethod.method_type.replace('_', ' ')})?
+                    </p>
+                  </div>
+                  <Link
+                    to="/farming-schedule"
+                    className="flex-shrink-0 bg-emerald-700 hover:bg-emerald-800 text-white text-xs font-bold px-3.5 py-2 rounded-xl transition-colors inline-flex items-center gap-1.5 shadow-2xs"
+                  >
+                    <Calendar className="h-3.5 w-3.5" />
+                    View Daily Schedule
+                  </Link>
                 </div>
               )}
             </section>

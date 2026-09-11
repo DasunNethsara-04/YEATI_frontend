@@ -6,6 +6,7 @@ import RegisterPage from './pages/RegisterPage';
 import DashboardPage from './pages/DashboardPage';
 import ProfilePage from './pages/ProfilePage';
 import CropDetailPage from './pages/CropDetailPage';
+import FarmingSchedulePage from './pages/FarmingSchedulePage';
 import AnalyticsDashboard from './pages/AnalyticsDashboard';
 import TrainingHubPage from './pages/TrainingHubPage';
 import AdminPage from './pages/AdminPage';
@@ -84,6 +85,7 @@ const App = () => (
           <Route path="/dashboard" element={<ProtectedRoute><DashboardPage /></ProtectedRoute>} />
           <Route path="/profile" element={<ProtectedRoute><ProfilePage /></ProtectedRoute>} />
           <Route path="/crop-detail" element={<ProtectedRoute><CropDetailPage /></ProtectedRoute>} />
+          <Route path="/farming-schedule" element={<ProtectedRoute><FarmingSchedulePage /></ProtectedRoute>} />
           <Route path="/analytics" element={<ProtectedRoute><AnalyticsDashboard /></ProtectedRoute>} />
           <Route path="/training-hub" element={<ProtectedRoute><TrainingHubPage /></ProtectedRoute>} />
 

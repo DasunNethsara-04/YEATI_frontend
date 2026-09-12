@@ -1,5 +1,6 @@
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import { AuthProvider, useAuth } from './context/AuthContext';
+import { LanguageProvider } from './context/LanguageContext';
 import { PlanProvider } from './context/PlanContext';
 import LoginPage from './pages/LoginPage';
 import RegisterPage from './pages/RegisterPage';
@@ -73,6 +74,7 @@ const PublicRoute: React.FC<{ children: React.ReactNode }> = ({ children }) => {
 import React from 'react';
 
 const App = () => (
+  <LanguageProvider>
   <AuthProvider>
     <PlanProvider>
       <BrowserRouter>
@@ -98,6 +100,7 @@ const App = () => (
       </BrowserRouter>
     </PlanProvider>
   </AuthProvider>
+  </LanguageProvider>
 );
 
 export default App;

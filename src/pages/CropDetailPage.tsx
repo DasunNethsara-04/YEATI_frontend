@@ -8,9 +8,11 @@
 import React, { useEffect, useState } from 'react';
 import { useNavigate, Link, useLocation } from 'react-router-dom';
 import { usePlan, type MethodBenchmark, type PlanCrop } from '../context/PlanContext';
+import { useLanguage } from '../context/LanguageContext';
 import { api } from '../api/axios';
 import { Wheat, Droplets, Leaf, Sprout, Calendar, FlaskConical, Thermometer, Bug, Lightbulb, AlertTriangle, ShieldCheck, Scale } from 'lucide-react';
 import { getCropImageUrl } from '../utils/cropImages';
+import LanguageSwitcher from '../components/ui/LanguageSwitcher';
 
 // ─── Method config ────────────────────────────────────────────────────────────
 const METHOD_CONFIG: Record<string, {
@@ -47,11 +49,11 @@ const METHOD_CONFIG: Record<string, {
 };
 
 const AREA_UNITS = [
-  { value: 'perches', label: 'Perches' },
-  { value: 'roods', label: 'Roods' },
-  { value: 'acres', label: 'Acres' },
-  { value: 'sq_m', label: 'Sq. Meters' },
-  { value: 'sq_ft', label: 'Sq. Feet' },
+  { value: 'perches', labelKey: 'cropDetail.unitPerches' },
+  { value: 'roods', labelKey: 'cropDetail.unitRoods' },
+  { value: 'acres', labelKey: 'cropDetail.unitAcres' },
+  { value: 'sq_m', labelKey: 'cropDetail.unitSqM' },
+  { value: 'sq_ft', labelKey: 'cropDetail.unitSqFt' },
 ] as const;
 
 type AreaUnit = typeof AREA_UNITS[number]['value'];
@@ -80,7 +82,17 @@ const MethodCard: React.FC<{
   selected: boolean;
   onClick: () => void;
 }> = ({ benchmark, selected, onClick }) => {
+  const { t } = useLanguage();
   const cfg = METHOD_CONFIG[benchmark.method_type] ?? METHOD_CONFIG.OPEN_FIELD;
+  const label = benchmark.method_type === 'HYDROPONICS' ? t('cropDetail.methodHydroponics')
+    : benchmark.method_type === 'ORGANIC' ? t('cropDetail.methodOrganic')
+    : t('cropDetail.methodOpenField');
+  const description = benchmark.method_type === 'HYDROPONICS' ? t('cropDetail.methodHydroponicsDesc')
+    : benchmark.method_type === 'ORGANIC' ? t('cropDetail.methodOrganicDesc')
+    : t('cropDetail.methodOpenFieldDesc');
+  const intensity = benchmark.method_type === 'HYDROPONICS' ? t('cropDetail.methodHydroponicsIntensity')
+    : benchmark.method_type === 'ORGANIC' ? t('cropDetail.methodOrganicIntensity')
+    : t('cropDetail.methodOpenFieldIntensity');
 
   return (
     <button
@@ -102,27 +114,27 @@ const MethodCard: React.FC<{
       <div className="flex items-start gap-3">
         <div className="flex-shrink-0 mt-0.5">{cfg.icon}</div>
         <div className="flex-1 min-w-0">
-          <h3 className={`font-bold text-base ${selected ? cfg.color : 'text-agri-text'}`}>{cfg.label}</h3>
-          <p className="text-xs text-agri-subtext mt-0.5 leading-relaxed">{cfg.description}</p>
-          <p className={`text-[10px] font-semibold mt-2 ${cfg.color} opacity-80`}>{cfg.intensity}</p>
+          <h3 className={`font-bold text-base ${selected ? cfg.color : 'text-agri-text'}`}>{label}</h3>
+          <p className="text-xs text-agri-subtext mt-0.5 leading-relaxed">{description}</p>
+          <p className={`text-[10px] font-semibold mt-2 ${cfg.color} opacity-80`}>{intensity}</p>
         </div>
       </div>
       <div className="mt-4 grid grid-cols-2 gap-2">
         <div className="bg-white/60 rounded-xl p-2.5">
-          <p className="text-[9px] text-agri-subtext uppercase tracking-wide font-medium">Avg Yield</p>
+          <p className="text-[9px] text-agri-subtext uppercase tracking-wide font-medium">{t('cropDetail.avgYield')}</p>
           <p className="text-sm font-bold text-agri-text mt-0.5">{fmtNum(benchmark.avg_yield_kg_per_acre)} kg/ac</p>
         </div>
         <div className="bg-white/60 rounded-xl p-2.5">
-          <p className="text-[9px] text-agri-subtext uppercase tracking-wide font-medium">Cost/Acre</p>
+          <p className="text-[9px] text-agri-subtext uppercase tracking-wide font-medium">{t('cropDetail.costPerAcre')}</p>
           <p className="text-sm font-bold text-agri-text mt-0.5">{fmtLKR(benchmark.total_cost_rs_per_acre)}</p>
         </div>
       </div>
       <div className="mt-2 flex gap-1.5 flex-wrap">
         {[
-          { label: 'Seeds', pct: benchmark.seed_share_pct },
-          { label: 'Labour', pct: benchmark.labour_share_pct },
-          { label: 'Fertilizer', pct: benchmark.fertilizer_share_pct },
-          { label: 'Other', pct: benchmark.other_share_pct },
+          { label: t('cropDetail.seeds'), pct: benchmark.seed_share_pct },
+          { label: t('cropDetail.labour'), pct: benchmark.labour_share_pct },
+          { label: t('cropDetail.fertilizer'), pct: benchmark.fertilizer_share_pct },
+          { label: t('cropDetail.other'), pct: benchmark.other_share_pct },
         ].map(({ label, pct }) => (
           <span key={label} className="text-[10px] font-medium px-2 py-0.5 bg-white/70 rounded-full border border-agri-border text-agri-subtext">
             {label} {pct}%
@@ -144,6 +156,7 @@ const CropDetailPage: React.FC = () => {
     userInputs, setUserInputs,
     setCurrentPhase,
   } = usePlan();
+  const { t } = useLanguage();
 
   const [availableCrops, setAvailableCrops] = useState<PlanCrop[]>([]);
   const [loadingCropsList, setLoadingCropsList] = useState(false);
@@ -276,22 +289,25 @@ const CropDetailPage: React.FC = () => {
               <svg className="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2}>
                 <path d="m15 18-6-6 6-6" />
               </svg>
-              Back to Dashboard
+              {t('nav.backToDashboard')}
             </button>
             <nav className="flex items-center gap-1.5 text-xs font-semibold">
-              <Link to="/dashboard" className="px-3 py-1.5 rounded-xl text-agri-subtext hover:text-agri-text">Location & Crops</Link>
-              <Link to="/crop-detail" className="px-3 py-1.5 rounded-xl bg-agri-primary text-white shadow-sm font-semibold">Crop Profile</Link>
-              <Link to="/farming-schedule" className="px-3 py-1.5 rounded-xl text-agri-subtext hover:text-agri-text">Daily Schedule</Link>
-              <Link to="/analytics" className="px-3 py-1.5 rounded-xl text-agri-subtext hover:text-agri-text">Analytics</Link>
-              <Link to="/training-hub" className="px-3 py-1.5 rounded-xl text-agri-subtext hover:text-agri-text">Training Hub</Link>
+              <Link to="/dashboard" className="px-3 py-1.5 rounded-xl text-agri-subtext hover:text-agri-text">{t('nav.locationCrops')}</Link>
+              <Link to="/crop-detail" className="px-3 py-1.5 rounded-xl bg-agri-primary text-white shadow-sm font-semibold">{t('nav.cropProfile')}</Link>
+              <Link to="/farming-schedule" className="px-3 py-1.5 rounded-xl text-agri-subtext hover:text-agri-text">{t('nav.dailySchedule')}</Link>
+              <Link to="/analytics" className="px-3 py-1.5 rounded-xl text-agri-subtext hover:text-agri-text">{t('nav.analytics')}</Link>
+              <Link to="/training-hub" className="px-3 py-1.5 rounded-xl text-agri-subtext hover:text-agri-text">{t('nav.trainingHub')}</Link>
             </nav>
+            <div className="ml-auto flex-shrink-0">
+              <LanguageSwitcher />
+            </div>
           </div>
         </header>
         <main className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-10 space-y-6">
           <div className="text-center space-y-2">
-            <h1 className="text-2xl font-bold text-agri-text">Select a Crop Profile</h1>
+            <h1 className="text-2xl font-bold text-agri-text">{t('cropDetail.selectCropProfile')}</h1>
             <p className="text-sm text-agri-subtext max-w-md mx-auto">
-              Choose a crop below to view agronomic requirements, select cultivation methods, and plan your resources.
+              {t('cropDetail.selectCropHint')}
             </p>
           </div>
           {loadingCropsList ? (
@@ -322,7 +338,7 @@ const CropDetailPage: React.FC = () => {
                       {c.category}
                     </span>
                   </div>
-                  <span className="text-agri-primary font-bold text-sm">Select →</span>
+                  <span className="text-agri-primary font-bold text-sm">{t('cropDetail.selectCropBtn')}</span>
                 </div>
               ))}
             </div>
@@ -352,21 +368,21 @@ const CropDetailPage: React.FC = () => {
             <svg className="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2}>
               <path d="m15 18-6-6 6-6" />
             </svg>
-            Back
+            {t('nav.back')}
           </button>
           <div className="h-4 w-px bg-agri-border" />
           <nav className="flex items-center gap-1.5 text-xs font-semibold overflow-x-auto">
             {[
-              { label: 'Location & Crops', path: '/dashboard' },
-              { label: 'Crop Profile', path: '/crop-detail' },
-              { label: 'Daily Schedule', path: '/farming-schedule' },
-              { label: 'Analytics', path: '/analytics' },
-              { label: 'Training Hub', path: '/training-hub' },
+              { labelKey: 'nav.locationCrops', path: '/dashboard' },
+              { labelKey: 'nav.cropProfile', path: '/crop-detail' },
+              { labelKey: 'nav.dailySchedule', path: '/farming-schedule' },
+              { labelKey: 'nav.analytics', path: '/analytics' },
+              { labelKey: 'nav.trainingHub', path: '/training-hub' },
             ].map((item) => {
               const isActive = location.pathname === item.path;
               return (
                 <Link
-                  key={item.label}
+                  key={item.labelKey}
                   to={item.path}
                   className={`px-3 py-1.5 rounded-xl whitespace-nowrap transition-all duration-200 ${
                     isActive
@@ -374,11 +390,14 @@ const CropDetailPage: React.FC = () => {
                       : 'text-agri-subtext hover:text-agri-text hover:bg-agri-bg'
                   }`}
                 >
-                  {item.label}
+                  {t(item.labelKey)}
                 </Link>
               );
             })}
           </nav>
+          <div className="ml-auto flex-shrink-0">
+            <LanguageSwitcher />
+          </div>
         </div>
       </header>
 
@@ -394,7 +413,7 @@ const CropDetailPage: React.FC = () => {
                   : <Sprout className="h-12 w-12 text-agri-lime" />}
               </span>
               <div>
-                <p className="text-agri-lime/70 text-xs font-semibold uppercase tracking-widest">Phase 2 — Crop Profile</p>
+                <p className="text-agri-lime/70 text-xs font-semibold uppercase tracking-widest">{t('cropDetail.phase2')}</p>
                 <h1 className="text-2xl lg:text-3xl font-bold text-white">{crop.name_en}</h1>
                 <p className="text-white/50 text-sm">{crop.name_si}</p>
               </div>
@@ -405,7 +424,7 @@ const CropDetailPage: React.FC = () => {
           </div>
           {selectedLocation && (
             <div className="relative z-10 bg-white/10 border border-white/20 rounded-2xl px-5 py-4 text-center flex-shrink-0">
-              <p className="text-white/50 text-xs mb-1">Your Location</p>
+              <p className="text-white/50 text-xs mb-1">{t('cropDetail.yourLocation')}</p>
               <p className="text-white font-bold text-lg">{selectedLocation.district_name}</p>
               <p className="text-white/40 text-xs">{selectedLocation.province}</p>
             </div>
@@ -422,15 +441,15 @@ const CropDetailPage: React.FC = () => {
                     <circle cx="12" cy="12" r="10" /><path d="M12 8v4l3 3" />
                   </svg>
                 </div>
-                Crop Parameters
+                {t('cropDetail.parameters')}
               </h2>
               <div className="space-y-2">
-                <InfoBadge icon={<Calendar className="h-4 w-4" />} label="Growing Cycle" value={`${crop.growing_cycle_duration_days} days`} />
-                <InfoBadge icon={<FlaskConical className="h-4 w-4" />} label="Soil pH Range" value={`${crop.min_soil_ph} – ${crop.max_soil_ph}`} />
-                <InfoBadge icon={<Sprout className="h-4 w-4" />} label="Preferred Soil" value={crop.preferred_soil_type} />
-                <InfoBadge icon={<Thermometer className="h-4 w-4" />} label="Temperature" value={`${crop.min_temp_celsius}°C – ${crop.max_temp_celsius}°C`} />
+                <InfoBadge icon={<Calendar className="h-4 w-4" />} label={t('cropDetail.growingCycle')} value={`${crop.growing_cycle_duration_days} ${t('cropDetail.days')}`} />
+                <InfoBadge icon={<FlaskConical className="h-4 w-4" />} label={t('cropDetail.soilPh')} value={`${crop.min_soil_ph} – ${crop.max_soil_ph}`} />
+                <InfoBadge icon={<Sprout className="h-4 w-4" />} label={t('cropDetail.preferredSoil')} value={crop.preferred_soil_type} />
+                <InfoBadge icon={<Thermometer className="h-4 w-4" />} label={t('cropDetail.temperature')} value={`${crop.min_temp_celsius}°C – ${crop.max_temp_celsius}°C`} />
                 {crop.water_requirement_summary && (
-                  <InfoBadge icon={<Droplets className="h-4 w-4" />} label="Water Needs" value={crop.water_requirement_summary} />
+                  <InfoBadge icon={<Droplets className="h-4 w-4" />} label={t('cropDetail.waterNeeds')} value={crop.water_requirement_summary} />
                 )}
               </div>
             </div>
@@ -439,7 +458,7 @@ const CropDetailPage: React.FC = () => {
               <div className="bg-orange-50 border border-orange-200 rounded-2xl p-4">
                 <div className="flex items-center gap-2 mb-2">
                   <Bug className="h-5 w-5 text-orange-700" />
-                  <h3 className="text-sm font-bold text-orange-800">Pests & Diseases</h3>
+                  <h3 className="text-sm font-bold text-orange-800">{t('cropDetail.pestsDiseases')}</h3>
                 </div>
                 <p className="text-xs text-orange-700 leading-relaxed">{crop.pests_and_diseases}</p>
               </div>
@@ -456,7 +475,7 @@ const CropDetailPage: React.FC = () => {
                     <path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z" />
                   </svg>
                 </div>
-                Select Farming Method
+                {t('cropDetail.selectMethod')}
               </h2>
 
               {loadingMethods ? (
@@ -469,7 +488,7 @@ const CropDetailPage: React.FC = () => {
                 <div className="bg-red-50 border border-red-200 rounded-2xl p-4 text-sm text-red-600">{methodsError}</div>
               ) : methods.length === 0 ? (
                 <div className="bg-agri-bg rounded-2xl p-8 text-center text-agri-subtext text-sm">
-                  No method benchmarks available for this crop yet.
+                  {t('cropDetail.noMethods')}
                 </div>
               ) : (
                 <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
@@ -488,10 +507,10 @@ const CropDetailPage: React.FC = () => {
                 <div className="mt-4 bg-emerald-50/90 border border-emerald-200 rounded-2xl p-4 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
                   <div>
                     <span className="text-[10px] font-bold uppercase tracking-wider text-emerald-800 bg-emerald-100/80 px-2 py-0.5 rounded-md">
-                      Field Activity Planner
+                      {t('cropDetail.fieldActivityPlanner')}
                     </span>
                     <p className="text-xs font-semibold text-emerald-950 mt-1">
-                      Need a day-by-day cultivation calendar for {crop.name_en} ({selectedMethod.method_type.replace('_', ' ')})?
+                      {t('cropDetail.needCalendar')} {crop.name_en} ({selectedMethod.method_type.replace('_', ' ')})?
                     </p>
                   </div>
                   <Link
@@ -499,7 +518,7 @@ const CropDetailPage: React.FC = () => {
                     className="flex-shrink-0 bg-emerald-700 hover:bg-emerald-800 text-white text-xs font-bold px-3.5 py-2 rounded-xl transition-colors inline-flex items-center gap-1.5 shadow-2xs"
                   >
                     <Calendar className="h-3.5 w-3.5" />
-                    View Daily Schedule
+                    {t('cropDetail.viewDailySchedule')}
                   </Link>
                 </div>
               )}
@@ -514,13 +533,13 @@ const CropDetailPage: React.FC = () => {
                     <path d="M16 21V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16" />
                   </svg>
                 </div>
-                Phase 3 — Your Resources
+                {t('cropDetail.phase3')}
               </h2>
 
               {/* Capital input */}
               <div>
                 <label htmlFor="capital-input" className="block text-sm font-semibold text-agri-text mb-2">
-                  Available Capital (LKR)
+                  {t('cropDetail.availableCapital')}
                 </label>
                 <div className="relative">
                   <span className="absolute left-4 top-1/2 -translate-y-1/2 text-sm font-bold text-agri-subtext">Rs.</span>
@@ -542,7 +561,7 @@ const CropDetailPage: React.FC = () => {
               {/* Area input */}
               <div>
                 <label htmlFor="area-input" className="block text-sm font-semibold text-agri-text mb-2">
-                  Cultivation Area
+                  {t('cropDetail.cultivationArea')}
                 </label>
                 <div className="flex gap-2">
                   <div className="relative flex-1">
@@ -572,7 +591,7 @@ const CropDetailPage: React.FC = () => {
                             : 'text-agri-subtext hover:text-agri-text'
                         }`}
                       >
-                        {unit.label}
+                        {t(unit.labelKey)}
                       </button>
                     ))}
                   </div>
@@ -593,18 +612,18 @@ const CropDetailPage: React.FC = () => {
                       ) : (
                         <ShieldCheck className="h-4 w-4 text-emerald-600 flex-shrink-0" />
                       )}
-                      {isOverBudget ? 'Over-Investment Alert' : 'Cultivation Plan Fully Funded'}
+                      {isOverBudget ? t('cropDetail.overBudgetTitle') : t('cropDetail.fullyFundedTitle')}
                     </span>
                     <span className="text-[11px] font-semibold">
-                      Required: Rs. {Math.round(requiredOpex).toLocaleString()}
+                      {t('cropDetail.required')} Rs. {Math.round(requiredOpex).toLocaleString()}
                     </span>
                   </div>
 
                   {isOverBudget ? (
                     <>
                       <p className="text-[11px] text-amber-800 leading-relaxed">
-                        Cultivating <strong>{userInputs.area_value} {userInputs.area_unit}</strong> requires <strong>Rs. {Math.round(requiredOpex).toLocaleString()}</strong>, which exceeds your budget by <strong>Rs. {Math.round(budgetGap).toLocaleString()}</strong>.
-                        Cultivating beyond your capital risks debt or running out of inputs mid-season.
+                        Cultivating <strong>{userInputs.area_value} {t(AREA_UNITS.find(u => u.value === userInputs.area_unit)?.labelKey || userInputs.area_unit)}</strong> requires <strong>Rs. {Math.round(requiredOpex).toLocaleString()}</strong>, which exceeds your budget by <strong>Rs. {Math.round(budgetGap).toLocaleString()}</strong>.
+                        {' '}{t('cropDetail.overBudgetMsg')}
                       </p>
                       <button
                         type="button"
@@ -617,14 +636,14 @@ const CropDetailPage: React.FC = () => {
                         className="w-full flex items-center justify-center gap-1.5 bg-amber-600 hover:bg-amber-700 text-white font-bold py-2.5 px-3 rounded-xl transition-colors text-xs shadow-sm cursor-pointer active:scale-[0.99]"
                       >
                         <Scale className="h-3.5 w-3.5" />
-                        Optimize to Safe Land Size ({safeOptimizedValue} {userInputs.area_unit} / {safePerchesDisplay} Perches)
+                        {t('cropDetail.optimizeSafe')} ({safeOptimizedValue} {t(AREA_UNITS.find(u => u.value === userInputs.area_unit)?.labelKey || userInputs.area_unit)} / {safePerchesDisplay} {t('cropDetail.unitPerches')})
                       </button>
                     </>
                   ) : (
                     <div className="flex items-center justify-between text-[11px] text-emerald-800">
-                      <span>Budget covers 100% of cultivation with <strong>Rs. {Math.round(budgetSurplus).toLocaleString()}</strong> reserve remaining.</span>
+                      <span>{t('cropDetail.budgetCovers')} <strong>Rs. {Math.round(budgetSurplus).toLocaleString()}</strong> {t('cropDetail.budgetReserve')}</span>
                       <span className="font-semibold text-emerald-900 whitespace-nowrap ml-2">
-                        Max safe: {safeAcresDisplay} ac
+                        {t('cropDetail.maxSafe')} {safeAcresDisplay} {t('cropDetail.unitAcres')}
                       </span>
                     </div>
                   )}
@@ -634,7 +653,7 @@ const CropDetailPage: React.FC = () => {
               {/* Proceed button */}
               {(!userInputs.capital_lkr || userInputs.capital_lkr <= 0) && (
                 <p className="text-xs text-amber-700 bg-amber-50 border border-amber-200 rounded-xl px-4 py-2.5 flex items-center gap-2">
-                  <Lightbulb className="h-4 w-4 text-amber-600 flex-shrink-0" /> Please enter your available capital (LKR) above to generate financial projections.
+                  <Lightbulb className="h-4 w-4 text-amber-600 flex-shrink-0" /> {t('cropDetail.enterCapitalHint')}
                 </p>
               )}
               <button
@@ -649,7 +668,7 @@ const CropDetailPage: React.FC = () => {
                 <svg className="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2}>
                   <path d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-2.293 2.293c-.63.63-.184 1.707.707 1.707H17m0 0a2 2 0 1 0 0 4 2 2 0 0 0 0-4zm-8 2a2 2 0 1 1-4 0 2 2 0 0 1 4 0z" />
                 </svg>
-                View Financial Analytics
+                {t('cropDetail.viewAnalytics')}
                 <svg className="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2.5}>
                   <path d="m9 18 6-6-6-6" />
                 </svg>

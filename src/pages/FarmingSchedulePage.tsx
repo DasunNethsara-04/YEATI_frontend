@@ -24,8 +24,10 @@ import {
   MapPin,
 } from 'lucide-react';
 import { usePlan } from '../context/PlanContext';
+import { useLanguage } from '../context/LanguageContext';
 import { api } from '../api/axios';
 import { getCropImageUrl } from '../utils/cropImages';
+import LanguageSwitcher from '../components/ui/LanguageSwitcher';
 
 interface Task {
   id: string;
@@ -98,20 +100,20 @@ const CROPS_LIST = [
 ];
 
 const METHODS_LIST = [
-  { key: 'OPEN_FIELD', label: 'Open Field Farming' },
-  { key: 'HYDROPONICS', label: 'Hydroponics' },
-  { key: 'ORGANIC', label: 'Organic Farming' },
+  { key: 'OPEN_FIELD', labelKey: 'cropDetail.methodOpenField' },
+  { key: 'HYDROPONICS', labelKey: 'cropDetail.methodHydroponics' },
+  { key: 'ORGANIC', labelKey: 'cropDetail.methodOrganic' },
 ];
 
 const CATEGORIES = [
-  { key: 'ALL', label: 'All Tasks', icon: Filter },
-  { key: 'LAND_PREPARATION', label: 'Land Prep', icon: Wheat },
-  { key: 'PLANTING', label: 'Planting & Sowing', icon: Sprout },
-  { key: 'IRRIGATION', label: 'Irrigation', icon: Droplets },
-  { key: 'FERTILIZING', label: 'Fertilizing', icon: Sparkles },
-  { key: 'PRUNING', label: 'Pruning & Staking', icon: Scissors },
-  { key: 'PEST_MONITORING', label: 'Pest Monitoring', icon: Bug },
-  { key: 'HARVESTING', label: 'Harvesting', icon: ShoppingBag },
+  { key: 'ALL', labelKey: 'schedule.catAll', icon: Filter },
+  { key: 'LAND_PREPARATION', labelKey: 'schedule.catLandPrep', icon: Wheat },
+  { key: 'PLANTING', labelKey: 'schedule.catPlanting', icon: Sprout },
+  { key: 'IRRIGATION', labelKey: 'schedule.catIrrigation', icon: Droplets },
+  { key: 'FERTILIZING', labelKey: 'schedule.catFertilizing', icon: Sparkles },
+  { key: 'PRUNING', labelKey: 'schedule.catPruning', icon: Scissors },
+  { key: 'PEST_MONITORING', labelKey: 'schedule.catPestMonitoring', icon: Bug },
+  { key: 'HARVESTING', labelKey: 'schedule.catHarvesting', icon: ShoppingBag },
 ];
 
 const STORAGE_COMPLETED_KEY = 'agripiyasa_schedule_completed_tasks';
@@ -120,6 +122,7 @@ const FarmingSchedulePage: React.FC = () => {
   const navigate = useNavigate();
   const location = useLocation();
   const { selectedCrop, selectedMethod, selectedLocation, setCurrentPhase } = usePlan();
+  const { t } = useLanguage();
 
   // Active crop and method state (defaults to context selection or Tomato + Open Field)
   const [activeCrop, setActiveCrop] = useState<string>(selectedCrop?.name_en || 'Tomato');
@@ -265,19 +268,19 @@ const FarmingSchedulePage: React.FC = () => {
   const getCategoryBadge = (category: string) => {
     switch (category) {
       case 'LAND_PREPARATION':
-        return { label: 'Land Prep', bg: 'bg-amber-100 text-amber-800 border-amber-200' };
+        return { label: t('schedule.catLandPrep'), bg: 'bg-amber-100 text-amber-800 border-amber-200' };
       case 'PLANTING':
-        return { label: 'Planting', bg: 'bg-emerald-100 text-emerald-800 border-emerald-200' };
+        return { label: t('schedule.catPlanting'), bg: 'bg-emerald-100 text-emerald-800 border-emerald-200' };
       case 'IRRIGATION':
-        return { label: 'Irrigation', bg: 'bg-blue-100 text-blue-800 border-blue-200' };
+        return { label: t('schedule.catIrrigation'), bg: 'bg-blue-100 text-blue-800 border-blue-200' };
       case 'FERTILIZING':
-        return { label: 'Fertilizing', bg: 'bg-purple-100 text-purple-800 border-purple-200' };
+        return { label: t('schedule.catFertilizing'), bg: 'bg-purple-100 text-purple-800 border-purple-200' };
       case 'PRUNING':
-        return { label: 'Pruning & Staking', bg: 'bg-teal-100 text-teal-800 border-teal-200' };
+        return { label: t('schedule.catPruning'), bg: 'bg-teal-100 text-teal-800 border-teal-200' };
       case 'PEST_MONITORING':
-        return { label: 'Pest Care', bg: 'bg-rose-100 text-rose-800 border-rose-200' };
+        return { label: t('schedule.catPestMonitoring'), bg: 'bg-rose-100 text-rose-800 border-rose-200' };
       case 'HARVESTING':
-        return { label: 'Harvesting', bg: 'bg-lime-100 text-lime-900 border-lime-300' };
+        return { label: t('schedule.catHarvesting'), bg: 'bg-lime-100 text-lime-900 border-lime-300' };
       default:
         return { label: category, bg: 'bg-gray-100 text-gray-800 border-gray-200' };
     }
@@ -317,18 +320,18 @@ const FarmingSchedulePage: React.FC = () => {
 
           <div className="h-4 w-px bg-agri-border" />
 
-          <nav className="flex items-center gap-1.5 text-xs font-semibold overflow-x-auto">
+          <nav className="hidden md:flex items-center gap-1.5 text-xs font-semibold overflow-x-auto flex-1 min-w-0">
             {[
-              { label: 'Location & Crops', path: '/dashboard' },
-              { label: 'Crop Profile', path: '/crop-detail' },
-              { label: 'Daily Schedule', path: '/farming-schedule' },
-              { label: 'Analytics', path: '/analytics' },
-              { label: 'Training Hub', path: '/training-hub' },
+              { labelKey: 'nav.locationCrops', path: '/dashboard' },
+              { labelKey: 'nav.cropProfile', path: '/crop-detail' },
+              { labelKey: 'nav.dailySchedule', path: '/farming-schedule' },
+              { labelKey: 'nav.analytics', path: '/analytics' },
+              { labelKey: 'nav.trainingHub', path: '/training-hub' },
             ].map((item) => {
               const isActive = location.pathname === item.path;
               return (
                 <Link
-                  key={item.label}
+                  key={item.labelKey}
                   to={item.path}
                   className={`px-3 py-1.5 rounded-xl whitespace-nowrap transition-all duration-200 ${
                     isActive
@@ -336,19 +339,20 @@ const FarmingSchedulePage: React.FC = () => {
                       : 'text-agri-subtext hover:text-agri-text hover:bg-agri-bg'
                   }`}
                 >
-                  {item.label}
+                  {t(item.labelKey)}
                 </Link>
               );
             })}
           </nav>
 
-          <div className="ml-auto flex items-center gap-2">
+          <div className="flex-shrink-0 flex items-center gap-2">
+            <LanguageSwitcher />
             <button
               onClick={() => window.print()}
               className="hidden md:flex items-center gap-1.5 border border-agri-border bg-white text-agri-text text-xs font-semibold px-3 py-1.5 rounded-xl hover:bg-agri-bg transition-colors"
             >
               <Printer className="h-3.5 w-3.5" />
-              Print Schedule
+              {t('schedule.print')}
             </button>
           </div>
         </div>
@@ -374,11 +378,11 @@ const FarmingSchedulePage: React.FC = () => {
               <div>
                 <div className="flex items-center gap-2 mb-1 flex-wrap">
                   <span className="text-agri-lime text-xs font-bold uppercase tracking-wider">
-                    Feature 3 — Field Guide
+                    {t('schedule.fieldGuide')}
                   </span>
                   <span className="text-white/40 text-xs">•</span>
                   <span className="text-white/80 text-xs font-semibold bg-white/10 px-2.5 py-0.5 rounded-full">
-                    {activeMethod.replace('_', ' ')}
+                    {t(METHODS_LIST.find((m) => m.key === activeMethod)?.labelKey || 'cropDetail.methodOpenField')}
                   </span>
                   {selectedLocation && (
                     <>
@@ -391,7 +395,7 @@ const FarmingSchedulePage: React.FC = () => {
                   )}
                 </div>
                 <h1 className="text-2xl lg:text-3xl font-bold flex items-center gap-2.5">
-                  {activeCrop} Cultivation Schedule
+                  {activeCrop} {t('schedule.title')}
                   <span className="text-white/50 text-base font-normal">
                     (
                     {CROPS_LIST.find((c) => c.name_en.toLowerCase() === activeCrop.toLowerCase())
@@ -400,9 +404,7 @@ const FarmingSchedulePage: React.FC = () => {
                   </span>
                 </h1>
                 <p className="text-white/60 text-sm mt-1 max-w-2xl leading-relaxed">
-                  Day-by-day and weekly field activities designed for Sri Lankan farmers. Follow
-                  these beginner-friendly agronomic practices for land preparation, planting,
-                  irrigation, fertilizing, pruning, and harvesting.
+                  {t('schedule.heroSubtitle')}
                 </p>
               </div>
             </div>
@@ -411,29 +413,29 @@ const FarmingSchedulePage: React.FC = () => {
             {schedule && (
               <div className="flex flex-wrap sm:flex-nowrap gap-3 bg-white/10 border border-white/20 rounded-2xl p-4 text-center">
                 <div className="px-3 py-1">
-                  <p className="text-[11px] text-white/60 uppercase font-semibold">Total Duration</p>
+                  <p className="text-[11px] text-white/60 uppercase font-semibold">{t('schedule.totalDuration')}</p>
                   <p className="text-lg font-bold text-agri-lime">
-                    {schedule.crop.total_cycle_days} Days
+                    {schedule.crop.total_cycle_days} {t('schedule.days')}
                   </p>
-                  <p className="text-[10px] text-white/40">~{schedule.timeline.duration_weeks} wks</p>
+                  <p className="text-[10px] text-white/40">~{schedule.timeline.duration_weeks} {t('schedule.wks')}</p>
                 </div>
                 <div className="h-auto w-px bg-white/20" />
                 <div className="px-3 py-1">
-                  <p className="text-[11px] text-white/60 uppercase font-semibold">First Harvest</p>
+                  <p className="text-[11px] text-white/60 uppercase font-semibold">{t('schedule.firstHarvest')}</p>
                   <p className="text-lg font-bold text-white">
                     {new Date(schedule.timeline.first_harvest_date).toLocaleDateString('en-LK', {
                       month: 'short',
                       day: 'numeric',
                     })}
                   </p>
-                  <p className="text-[10px] text-white/40">Estimated</p>
+                  <p className="text-[10px] text-white/40">{t('schedule.estimated')}</p>
                 </div>
                 <div className="h-auto w-px bg-white/20" />
                 <div className="px-3 py-1">
-                  <p className="text-[11px] text-white/60 uppercase font-semibold">Completed</p>
+                  <p className="text-[11px] text-white/60 uppercase font-semibold">{t('schedule.completed')}</p>
                   <p className="text-lg font-bold text-emerald-400">{completionPercent}%</p>
                   <p className="text-[10px] text-white/40">
-                    {completedCount}/{totalTasks} tasks
+                    {completedCount}/{totalTasks} {t('schedule.tasks')}
                   </p>
                 </div>
               </div>
@@ -447,11 +449,10 @@ const FarmingSchedulePage: React.FC = () => {
             <div>
               <h2 className="text-base font-bold text-agri-text flex items-center gap-2">
                 <CalendarDays className="h-5 w-5 text-agri-primary" />
-                Customize Cultivation Schedule
+                {t('schedule.customize')}
               </h2>
               <p className="text-xs text-agri-subtext mt-0.5">
-                Switch between crops, farming methods, or adjust your planting date to project exact
-                calendar milestones.
+                {t('schedule.customizeDesc')}
               </p>
             </div>
 
@@ -462,7 +463,7 @@ const FarmingSchedulePage: React.FC = () => {
                 className="text-xs font-bold text-agri-text whitespace-nowrap flex items-center gap-1.5"
               >
                 <Clock className="h-3.5 w-3.5 text-agri-primary" />
-                Planting Start Date:
+                {t('schedule.plantingStartDate')}
               </label>
               <input
                 id="planting-date-input"
@@ -478,7 +479,7 @@ const FarmingSchedulePage: React.FC = () => {
             {/* Crop Selector */}
             <div>
               <label className="block text-xs font-bold uppercase tracking-wider text-agri-subtext mb-2.5">
-                Select Vegetable Crop
+                {t('schedule.selectCrop')}
               </label>
               <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
                 {CROPS_LIST.map((c) => {
@@ -507,7 +508,7 @@ const FarmingSchedulePage: React.FC = () => {
             {/* Method Selector */}
             <div>
               <label className="block text-xs font-bold uppercase tracking-wider text-agri-subtext mb-2.5">
-                Select Cultivation Method
+                {t('schedule.selectMethod')}
               </label>
               <div className="grid grid-cols-1 sm:grid-cols-3 gap-2">
                 {METHODS_LIST.map((m) => {
@@ -523,7 +524,7 @@ const FarmingSchedulePage: React.FC = () => {
                           : 'bg-agri-bg text-agri-text border-agri-border hover:bg-white hover:border-agri-primary/30'
                       }`}
                     >
-                      {m.label}
+                      {t(m.labelKey)}
                     </button>
                   );
                 })}
@@ -538,7 +539,7 @@ const FarmingSchedulePage: React.FC = () => {
             <h3 className="text-sm font-bold text-agri-text flex items-center justify-between">
               <span className="flex items-center gap-2">
                 <Sprout className="h-4 w-4 text-agri-primary" />
-                Growth Stages & Target Timeline
+                {t('schedule.growthStages')}
               </span>
               <span className="text-xs font-semibold text-agri-subtext">
                 {schedule.timeline.formatted_cycle}
@@ -553,8 +554,8 @@ const FarmingSchedulePage: React.FC = () => {
                 >
                   <div>
                     <div className="flex items-center justify-between text-[11px] font-bold text-agri-primary mb-1">
-                      <span>Stage {idx + 1}</span>
-                      <span>Day {stage.start_day}–{stage.end_day}</span>
+                      <span>{t('schedule.stage')} {idx + 1}</span>
+                      <span>{t('schedule.day')} {stage.start_day}–{stage.end_day}</span>
                     </div>
                     <h4 className="font-bold text-xs text-agri-text leading-snug">{stage.name}</h4>
                     <p className="text-[11px] text-agri-subtext mt-1.5 leading-relaxed line-clamp-2">
@@ -589,7 +590,7 @@ const FarmingSchedulePage: React.FC = () => {
                   }`}
                 >
                   <Icon className="h-3.5 w-3.5" />
-                  {cat.label}
+                  {t(cat.labelKey)}
                 </button>
               );
             })}
@@ -606,7 +607,7 @@ const FarmingSchedulePage: React.FC = () => {
                   : 'text-agri-subtext hover:text-agri-text'
               }`}
             >
-              Weekly Schedule
+              {t('schedule.weeklySchedule')}
             </button>
             <button
               type="button"
@@ -617,7 +618,7 @@ const FarmingSchedulePage: React.FC = () => {
                   : 'text-agri-subtext hover:text-agri-text'
               }`}
             >
-              Daily Routine
+              {t('schedule.dailyRoutine')}
             </button>
           </div>
         </div>
@@ -644,11 +645,10 @@ const FarmingSchedulePage: React.FC = () => {
                 <div>
                   <h3 className="text-base font-bold text-agri-text flex items-center gap-2">
                     <Clock className="h-5 w-5 text-agri-primary" />
-                    Standard Daily Farmer Routine for {schedule.crop.name_en}
+                    {t('schedule.standardRoutine')} {schedule.crop.name_en}
                   </h3>
                   <p className="text-xs text-agri-subtext mt-1">
-                    Consistent morning and evening inspections prevent 90% of pest infestations and
-                    irrigation stress.
+                    {t('schedule.routineHint')}
                   </p>
                 </div>
               </div>
@@ -687,7 +687,7 @@ const FarmingSchedulePage: React.FC = () => {
               <div className="bg-amber-50 border border-amber-200 rounded-3xl p-6 space-y-3">
                 <h4 className="text-sm font-bold text-amber-900 flex items-center gap-2">
                   <Bug className="h-4 w-4 text-amber-700" />
-                  Primary Pests & Pathogens to Inspect Daily
+                  {t('schedule.primaryPests')}
                 </h4>
                 <div className="flex flex-wrap gap-2">
                   {schedule.crop.pests_and_diseases.map((p) => (
@@ -711,7 +711,7 @@ const FarmingSchedulePage: React.FC = () => {
           <div className="space-y-6">
             <div className="flex items-center justify-between text-xs text-agri-subtext px-1">
               <span>
-                Showing <strong>{filteredWeeks.length} weeks</strong> of scheduled field activities
+                {t('schedule.showing')} <strong>{filteredWeeks.length} {t('schedule.showingWeeks')}</strong>
               </span>
               <div className="flex items-center gap-3">
                 <button
@@ -719,7 +719,7 @@ const FarmingSchedulePage: React.FC = () => {
                   onClick={expandAll}
                   className="hover:text-agri-primary font-semibold transition-colors"
                 >
-                  Expand All
+                  {t('schedule.expandAll')}
                 </button>
                 <span>•</span>
                 <button
@@ -727,7 +727,7 @@ const FarmingSchedulePage: React.FC = () => {
                   onClick={collapseAll}
                   className="hover:text-agri-primary font-semibold transition-colors"
                 >
-                  Collapse All
+                  {t('schedule.collapseAll')}
                 </button>
                 {completedCount > 0 && (
                   <>
@@ -738,7 +738,7 @@ const FarmingSchedulePage: React.FC = () => {
                       className="text-rose-600 hover:text-rose-700 font-semibold flex items-center gap-1 transition-colors"
                     >
                       <RotateCcw className="h-3 w-3" />
-                      Reset Checkmarks
+                      {t('schedule.resetCheckmarks')}
                     </button>
                   </>
                 )}
@@ -748,17 +748,16 @@ const FarmingSchedulePage: React.FC = () => {
             {filteredWeeks.length === 0 ? (
               <div className="bg-white rounded-3xl border border-agri-border p-12 text-center space-y-3">
                 <Info className="h-10 w-10 text-agri-subtext mx-auto" />
-                <h4 className="text-sm font-bold text-agri-text">No Tasks in this Category</h4>
+                <h4 className="text-sm font-bold text-agri-text">{t('schedule.noTasks')}</h4>
                 <p className="text-xs text-agri-subtext max-w-sm mx-auto">
-                  There are no scheduled activities matching &quot;{selectedCategory}&quot; for this crop. Try
-                  selecting another category or switch to &quot;All Tasks&quot;.
+                  {t('schedule.noTasksHint')}
                 </p>
                 <button
                   type="button"
                   onClick={() => setSelectedCategory('ALL')}
                   className="mt-2 text-xs font-bold text-agri-primary hover:underline"
                 >
-                  Show All Tasks
+                  {t('schedule.showAllTasks')}
                 </button>
               </div>
             ) : (
@@ -805,7 +804,7 @@ const FarmingSchedulePage: React.FC = () => {
                             <span className="font-medium">📅 {week.calendar_range}</span>
                             <span>•</span>
                             <span>
-                              {weekTasksCompleted} / {week.tasks.length} tasks done
+                              {weekTasksCompleted} / {week.tasks.length} {t('schedule.tasksDone')}
                             </span>
                           </div>
                         </div>
@@ -814,7 +813,7 @@ const FarmingSchedulePage: React.FC = () => {
                       <div className="flex items-center gap-3 flex-shrink-0">
                         {isAllCompleted && (
                           <span className="hidden sm:inline-flex items-center gap-1 text-xs font-bold text-emerald-700 bg-emerald-100 border border-emerald-200 px-2.5 py-1 rounded-xl">
-                            <CheckCircle2 className="h-3.5 w-3.5" /> All Done
+                            <CheckCircle2 className="h-3.5 w-3.5" /> {t('schedule.allDone')}
                           </span>
                         )}
                         <div className="h-8 w-8 rounded-full bg-agri-bg border border-agri-border flex items-center justify-center text-agri-subtext">
@@ -890,7 +889,7 @@ const FarmingSchedulePage: React.FC = () => {
                                   {task.beginner_tip && (
                                     <div className="bg-emerald-50/80 border border-emerald-200 rounded-xl p-3 text-xs text-emerald-900 flex items-start gap-2 mt-2">
                                       <span className="font-bold text-emerald-700 whitespace-nowrap">
-                                        💡 Beginner Advice:
+                                        💡 {t('schedule.beginnerAdvice')}
                                       </span>
                                       <span className="leading-relaxed">{task.beginner_tip}</span>
                                     </div>
@@ -914,14 +913,13 @@ const FarmingSchedulePage: React.FC = () => {
           <div className="bg-white rounded-3xl border border-agri-border p-6 flex flex-col justify-between space-y-4">
             <div>
               <span className="text-[11px] font-bold uppercase tracking-wider text-agri-primary">
-                Financial Planning
+                {t('schedule.financialPlanning')}
               </span>
               <h4 className="font-bold text-base text-agri-text mt-1">
-                View Financial Projections & ROI
+                {t('schedule.viewFinancialProj')}
               </h4>
               <p className="text-xs text-agri-subtext mt-1 leading-relaxed">
-                Calculate expected operational expenses (OpEx), predicted market price at harvest,
-                and total revenue for this crop plan.
+                {t('schedule.financialProjDesc')}
               </p>
             </div>
             <button
@@ -931,7 +929,7 @@ const FarmingSchedulePage: React.FC = () => {
               }}
               className="bg-agri-primary text-white font-semibold text-xs py-2.5 px-4 rounded-xl hover:bg-agri-dark transition-colors flex items-center justify-center gap-2 self-start"
             >
-              View Analytics Dashboard
+              {t('schedule.viewAnalyticsBtn')}
               <ArrowRight className="h-3.5 w-3.5" />
             </button>
           </div>
@@ -939,14 +937,13 @@ const FarmingSchedulePage: React.FC = () => {
           <div className="bg-gradient-to-br from-agri-dark to-agri-primary rounded-3xl p-6 text-white flex flex-col justify-between space-y-4">
             <div>
               <span className="text-[11px] font-bold uppercase tracking-wider text-agri-lime">
-                Agricultural Education
+                {t('schedule.agriEducation')}
               </span>
               <h4 className="font-bold text-base text-white mt-1">
-                Explore Practical Training Courses
+                {t('schedule.exploreCourses')}
               </h4>
               <p className="text-xs text-white/70 mt-1 leading-relaxed">
-                Enroll in free and government-certified agricultural courses offered by the Sri
-                Lankan Department of Agriculture.
+                {t('schedule.agriEducationDesc')}
               </p>
             </div>
             <button
@@ -956,7 +953,7 @@ const FarmingSchedulePage: React.FC = () => {
               }}
               className="bg-white text-agri-dark font-semibold text-xs py-2.5 px-4 rounded-xl hover:bg-agri-lime transition-colors flex items-center justify-center gap-2 self-start"
             >
-              Browse Training Courses
+              {t('schedule.browseCoursesBtn')}
               <ArrowRight className="h-3.5 w-3.5" />
             </button>
           </div>

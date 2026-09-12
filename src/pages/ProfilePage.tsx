@@ -1,9 +1,11 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
+import { useLanguage } from '../context/LanguageContext';
 import { supabase } from '../lib/supabaseClient';
 import Button from '../components/ui/Button';
 import Input from '../components/ui/Input';
+import LanguageSwitcher from '../components/ui/LanguageSwitcher';
 
 // ─── Icons ────────────────────────────────────────────────────────────────────
 const ArrowLeftIcon = () => (
@@ -43,6 +45,7 @@ const roleConfig: Record<string, { label: string; color: string; description: st
 const ProfilePage: React.FC = () => {
   const navigate = useNavigate();
   const { user, profile, signOut } = useAuth();
+  const { t } = useLanguage();
 
   const [fullName, setFullName] = useState(profile?.full_name ?? '');
   const [phoneNumber, setPhoneNumber] = useState(profile?.phone_number ?? '');
@@ -109,9 +112,10 @@ const ProfilePage: React.FC = () => {
             className="flex items-center gap-2 px-3 py-1.5 rounded-xl text-sm text-agri-subtext hover:text-agri-text hover:bg-agri-bg transition-colors border border-agri-border"
           >
             <ArrowLeftIcon />
-            Dashboard
+            {t('nav.backToDashboard')}
           </button>
           <div className="flex items-center gap-2.5 ml-auto">
+            <LanguageSwitcher />
             <img src="/logo.png" alt="AgriPiyasa Logo" className="h-8 w-auto object-contain" />
             <span className="text-agri-dark text-base font-bold">Agri පියස</span>
           </div>
@@ -121,8 +125,8 @@ const ProfilePage: React.FC = () => {
       {/* ── Content ──────────────────────────────────────────────────────── */}
       <main className="max-w-4xl mx-auto px-4 sm:px-6 py-8 space-y-6">
         <div>
-          <h1 className="text-2xl font-bold text-agri-text">My Profile</h1>
-          <p className="text-agri-subtext text-sm mt-1">Manage your account information</p>
+          <h1 className="text-2xl font-bold text-agri-text">{t('profile.title')}</h1>
+          <p className="text-agri-subtext text-sm mt-1">{t('profile.subtitle')}</p>
         </div>
 
         {/* ── Avatar + Role card ────────────────────────────────────────── */}
@@ -147,7 +151,7 @@ const ProfilePage: React.FC = () => {
                 {roleCfg.label}
               </span>
               <span className="text-xs text-agri-subtext bg-agri-bg border border-agri-border rounded-full px-3 py-1">
-                Member since {profile?.created_at
+                {t('profile.memberSince')} {profile?.created_at
                   ? new Date(profile.created_at).toLocaleDateString('en-GB', { month: 'long', year: 'numeric' })
                   : '—'}
               </span>
@@ -159,13 +163,12 @@ const ProfilePage: React.FC = () => {
         <div className="bg-white rounded-2xl border border-agri-border p-5">
           <div className="flex items-center gap-2 mb-3">
             <ShieldIcon />
-            <h3 className="font-semibold text-agri-text text-sm">Account Role & Permissions</h3>
+            <h3 className="font-semibold text-agri-text text-sm">{t('profile.rolePermissions')}</h3>
           </div>
           <p className="text-sm text-agri-subtext leading-relaxed">{roleCfg.description}</p>
           <div className="mt-4 pt-4 border-t border-agri-border">
             <p className="text-xs text-agri-subtext">
-              <span className="font-semibold text-agri-text">Role changes</span> are managed by an administrator.
-              If you need elevated access, please contact your system admin.
+              <span className="font-semibold text-agri-text">{t('profile.roleNote')}</span>
             </p>
             <div className="mt-3 grid grid-cols-3 gap-2 text-center">
               {(['USER', 'RESEARCHER', 'ADMIN'] as const).map((r) => (
@@ -177,7 +180,7 @@ const ProfilePage: React.FC = () => {
                     }`}
                 >
                   {roleConfig[r].label}
-                  {r === role && <div className="mt-1 text-[10px] font-normal opacity-70">current</div>}
+                  {r === role && <div className="mt-1 text-[10px] font-normal opacity-70">{t('profile.current')}</div>}
                 </div>
               ))}
             </div>
@@ -189,7 +192,7 @@ const ProfilePage: React.FC = () => {
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-2">
               <UserIcon />
-              <h3 className="font-semibold text-agri-text text-sm">Personal Information</h3>
+              <h3 className="font-semibold text-agri-text text-sm">{t('profile.personalInfo')}</h3>
             </div>
             {!isEditing && (
               <Button
@@ -198,7 +201,7 @@ const ProfilePage: React.FC = () => {
                 size="sm"
                 onClick={() => setIsEditing(true)}
               >
-                Edit
+                {t('profile.edit')}
               </Button>
             )}
           </div>
@@ -207,7 +210,7 @@ const ProfilePage: React.FC = () => {
           {saveSuccess && (
             <div className="flex items-center gap-2 rounded-xl bg-green-50 border border-green-200 px-3 py-2.5 text-sm text-green-700">
               <CheckIcon />
-              Profile updated successfully
+              {t('profile.saveSuccess')}
             </div>
           )}
 
@@ -224,7 +227,7 @@ const ProfilePage: React.FC = () => {
           <div className="grid sm:grid-cols-2 gap-4">
             <Input
               id="profile-fullname"
-              label="Full name"
+              label={t('profile.fullName')}
               value={fullName}
               onChange={(e) => setFullName(e.target.value)}
               disabled={!isEditing}
@@ -233,7 +236,7 @@ const ProfilePage: React.FC = () => {
             />
             <div className="flex flex-col gap-1.5">
               <label htmlFor="profile-email" className="text-sm font-medium text-agri-text">
-                Email address
+                {t('profile.email')}
               </label>
               <div className="flex items-center gap-2 rounded-xl border border-agri-border bg-agri-bg px-4 py-2.5 text-sm text-agri-subtext cursor-not-allowed">
                 <svg className="h-4 w-4 flex-shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2}>
@@ -242,11 +245,11 @@ const ProfilePage: React.FC = () => {
                 <span className="truncate">{user?.email}</span>
                 <span className="ml-auto text-[10px] bg-agri-primary/10 text-agri-primary px-1.5 py-0.5 rounded-full font-semibold flex-shrink-0">locked</span>
               </div>
-              <p className="text-xs text-agri-subtext">Email cannot be changed here</p>
+              <p className="text-xs text-agri-subtext">{t('profile.emailLocked')}</p>
             </div>
             <Input
               id="profile-phone"
-              label="Phone number (optional)"
+              label={t('profile.phone')}
               value={phoneNumber}
               onChange={(e) => setPhoneNumber(e.target.value)}
               disabled={!isEditing}
@@ -254,11 +257,11 @@ const ProfilePage: React.FC = () => {
               leftIcon={<PhoneIcon />}
             />
             <div className="flex flex-col gap-1.5">
-              <label className="text-sm font-medium text-agri-text">Role</label>
+              <label className="text-sm font-medium text-agri-text">{t('profile.role')}</label>
               <div className={`flex items-center gap-2 rounded-xl border px-4 py-2.5 text-sm font-semibold cursor-not-allowed ${roleCfg.color}`}>
                 <ShieldIcon />
                 {roleCfg.label}
-                <span className="ml-auto text-[10px] opacity-70 flex-shrink-0">assigned by admin</span>
+                <span className="ml-auto text-[10px] opacity-70 flex-shrink-0">{t('profile.roleAssigned')}</span>
               </div>
             </div>
           </div>
@@ -271,7 +274,7 @@ const ProfilePage: React.FC = () => {
                 isLoading={isSaving}
                 size="md"
               >
-                Save Changes
+                {t('profile.save')}
               </Button>
               <Button
                 id="cancel-edit-btn"
@@ -280,7 +283,7 @@ const ProfilePage: React.FC = () => {
                 onClick={handleCancel}
                 disabled={isSaving}
               >
-                Cancel
+                {t('profile.cancel')}
               </Button>
             </div>
           )}
@@ -288,15 +291,15 @@ const ProfilePage: React.FC = () => {
 
         {/* ── Danger zone ───────────────────────────────────────────────── */}
         <div className="bg-white rounded-2xl border border-red-200 p-5 space-y-3">
-          <h3 className="font-semibold text-red-600 text-sm">Sign Out</h3>
-          <p className="text-sm text-agri-subtext">You'll be redirected to the login page.</p>
+          <h3 className="font-semibold text-red-600 text-sm">{t('profile.signOut')}</h3>
+          <p className="text-sm text-agri-subtext">{t('profile.signOutHint')}</p>
           <Button
             id="profile-signout-btn"
             variant="danger"
             size="md"
             onClick={handleSignOut}
           >
-            Sign Out
+            {t('profile.signOut')}
           </Button>
         </div>
       </main>

@@ -1,8 +1,10 @@
 import React, { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
+import { useLanguage } from '../context/LanguageContext';
 import Button from '../components/ui/Button';
 import Input from '../components/ui/Input';
+import LanguageSwitcher from '../components/ui/LanguageSwitcher';
 
 // ─── Icons ────────────────────────────────────────────────────────────────────
 const MailIcon = () => (
@@ -39,6 +41,7 @@ const EyeIcon = ({ open }: { open: boolean }) =>
 const LoginPage: React.FC = () => {
   const navigate = useNavigate();
   const { signIn } = useAuth();
+  const { t } = useLanguage();
 
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
@@ -48,9 +51,9 @@ const LoginPage: React.FC = () => {
 
   const validate = (): boolean => {
     const newErrors: typeof errors = {};
-    if (!email) newErrors.email = 'Email is required';
-    else if (!/\S+@\S+\.\S+/.test(email)) newErrors.email = 'Enter a valid email';
-    if (!password) newErrors.password = 'Password is required';
+    if (!email) newErrors.email = t('login.emailRequired');
+    else if (!/\S+@\S+\.\S+/.test(email)) newErrors.email = t('login.emailInvalid');
+    if (!password) newErrors.password = t('login.passwordRequired');
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
   };
@@ -130,16 +133,20 @@ const LoginPage: React.FC = () => {
       {/* ── Right Form Panel ─── */}
       <div className="flex-1 flex items-center justify-center p-6 lg:p-12">
         <div className="w-full max-w-md space-y-8">
-          {/* Mobile logo */}
-          <div className="lg:hidden flex items-center gap-2.5">
-            <img src="/logo.png" alt="AgriPiyasa Logo" className="h-9 w-auto object-contain" />
-            <span className="text-agri-dark text-xl font-bold">Agri පියස</span>
+          {/* Mobile logo + language switcher row */}
+          <div className="flex items-center justify-between">
+            <div className="lg:hidden flex items-center gap-2.5">
+              <img src="/logo.png" alt="AgriPiyasa Logo" className="h-9 w-auto object-contain" />
+              <span className="text-agri-dark text-xl font-bold">Agri පියස</span>
+            </div>
+            <div className="lg:flex hidden" />
+            <LanguageSwitcher />
           </div>
 
           {/* Heading */}
           <div className="space-y-1">
-            <h2 className="text-2xl font-bold text-agri-text">Welcome back</h2>
-            <p className="text-agri-subtext text-sm">Sign in to your AgriPiyasa account</p>
+            <h2 className="text-2xl font-bold text-agri-text">{t('login.welcome')}</h2>
+            <p className="text-agri-subtext text-sm">{t('login.subtitle')}</p>
           </div>
 
           {/* General error */}
@@ -157,7 +164,7 @@ const LoginPage: React.FC = () => {
             <Input
               id="login-email"
               type="email"
-              label="Email address"
+              label={t('login.email')}
               placeholder="you@example.com"
               autoComplete="email"
               value={email}
@@ -168,7 +175,7 @@ const LoginPage: React.FC = () => {
             <Input
               id="login-password"
               type={showPassword ? 'text' : 'password'}
-              label="Password"
+              label={t('login.password')}
               placeholder="••••••••"
               autoComplete="current-password"
               value={password}
@@ -189,7 +196,7 @@ const LoginPage: React.FC = () => {
 
             <div className="flex items-center justify-end">
               <button type="button" className="text-xs text-agri-primary hover:underline font-medium">
-                Forgot password?
+                {t('login.forgot')}
               </button>
             </div>
 
@@ -200,7 +207,7 @@ const LoginPage: React.FC = () => {
               size="lg"
               isLoading={isLoading}
             >
-              Sign In
+              {t('login.submit')}
             </Button>
           </form>
 
@@ -213,13 +220,13 @@ const LoginPage: React.FC = () => {
 
           {/* Footer */}
           <p className="text-center text-sm text-agri-subtext">
-            Don't have an account?{' '}
+            {t('login.noAccount')}{' '}
             <Link
               to="/register"
               id="go-to-register-link"
               className="text-agri-primary font-semibold hover:underline"
             >
-              Create one for free
+              {t('login.createFree')}
             </Link>
           </p>
         </div>

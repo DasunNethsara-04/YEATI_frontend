@@ -1,8 +1,10 @@
 import React, { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
+import { useLanguage } from '../context/LanguageContext';
 import Button from '../components/ui/Button';
 import Input from '../components/ui/Input';
+import LanguageSwitcher from '../components/ui/LanguageSwitcher';
 
 // ─── Icons ────────────────────────────────────────────────────────────────────
 const MailIcon = () => (
@@ -83,6 +85,7 @@ interface FormErrors {
 const RegisterPage: React.FC = () => {
   const navigate = useNavigate();
   const { signUp } = useAuth();
+  const { t } = useLanguage();
 
   const [fullName, setFullName] = useState('');
   const [email, setEmail] = useState('');
@@ -178,15 +181,19 @@ const RegisterPage: React.FC = () => {
       {/* ── Right Form Panel ─── */}
       <div className="flex-1 flex items-center justify-center p-6 lg:p-12">
         <div className="w-full max-w-md space-y-7">
-          {/* Mobile logo */}
-          <div className="lg:hidden flex items-center gap-2.5">
-            <img src="/logo.png" alt="AgriPiyasa Logo" className="h-9 w-auto object-contain" />
-            <span className="text-agri-dark text-xl font-bold">Agri පියස</span>
+          {/* Mobile logo + language switcher row */}
+          <div className="flex items-center justify-between">
+            <div className="lg:hidden flex items-center gap-2.5">
+              <img src="/logo.png" alt="AgriPiyasa Logo" className="h-9 w-auto object-contain" />
+              <span className="text-agri-dark text-xl font-bold">Agri පියස</span>
+            </div>
+            <div className="lg:flex hidden" />
+            <LanguageSwitcher />
           </div>
 
           <div className="space-y-1">
-            <h2 className="text-2xl font-bold text-agri-text">Create your account</h2>
-            <p className="text-agri-subtext text-sm">Start making smarter farming decisions today</p>
+            <h2 className="text-2xl font-bold text-agri-text">{t('register.title')}</h2>
+            <p className="text-agri-subtext text-sm">{t('register.subtitle')}</p>
           </div>
 
           {/* Success banner */}

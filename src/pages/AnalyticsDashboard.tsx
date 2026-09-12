@@ -5,12 +5,13 @@
  * historical price trend (line chart), and ML-predicted price/climate data.
  */
 import React, { useEffect, useState, useCallback } from 'react';
-import { useNavigate, Link } from 'react-router-dom';
+import { useNavigate, Link, useLocation } from 'react-router-dom';
 import {
   PieChart, Pie, Cell, Tooltip, ResponsiveContainer, Legend,
   LineChart, Line, XAxis, YAxis, CartesianGrid,
 } from 'recharts';
 import { usePlan, type AnalyticsResult } from '../context/PlanContext';
+import { useLanguage } from '../context/LanguageContext';
 import { api } from '../api/axios';
 import {
   BarChart3,
@@ -31,6 +32,7 @@ import {
   ChevronDown,
   ChevronUp,
 } from 'lucide-react';
+import LanguageSwitcher from '../components/ui/LanguageSwitcher';
 
 // ─── Formatters ───────────────────────────────────────────────────────────────
 const fmtLKR = (n: number) =>
@@ -99,6 +101,8 @@ const AnalyticsDashboard: React.FC = () => {
     selectedCrop, selectedMethod, userInputs, selectedLocation,
     analyticsResult, setAnalyticsResult, setCurrentPhase,
   } = usePlan();
+  const { t } = useLanguage();
+  const location = useLocation();
 
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -161,7 +165,7 @@ const AnalyticsDashboard: React.FC = () => {
     return (
       <div className="min-h-screen bg-agri-bg">
         <header className="sticky top-0 z-40 bg-white/90 backdrop-blur-xl border-b border-agri-border shadow-sm">
-          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between">
+          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center gap-4">
             <div className="flex items-center gap-3">
               <Link to="/dashboard" className="flex items-center gap-2 mr-1 flex-shrink-0">
                 <img src="/logo.png" alt="AgriPiyasa Logo" className="h-8 w-auto object-contain" />
@@ -178,35 +182,39 @@ const AnalyticsDashboard: React.FC = () => {
                 Dashboard
               </button>
             </div>
-            <nav className="flex items-center gap-1.5 text-xs font-semibold">
-              <Link to="/dashboard" className="px-3 py-1.5 rounded-xl text-agri-subtext hover:text-agri-text">Location & Crops</Link>
-              <Link to="/crop-detail" className="px-3 py-1.5 rounded-xl text-agri-subtext hover:text-agri-text">Crop Profile</Link>
-              <Link to="/farming-schedule" className="px-3 py-1.5 rounded-xl text-agri-subtext hover:text-agri-text">Daily Schedule</Link>
-              <Link to="/analytics" className="px-3 py-1.5 rounded-xl bg-agri-primary text-white shadow-sm font-semibold">Analytics</Link>
-              <Link to="/training-hub" className="px-3 py-1.5 rounded-xl text-agri-subtext hover:text-agri-text">Training Hub</Link>
+            <div className="h-4 w-px bg-agri-border" />
+            <nav className="flex items-center gap-1.5 text-xs font-semibold overflow-x-auto">
+              <Link to="/dashboard" className="px-3 py-1.5 rounded-xl text-agri-subtext hover:text-agri-text">{t('nav.locationCrops')}</Link>
+              <Link to="/crop-detail" className="px-3 py-1.5 rounded-xl text-agri-subtext hover:text-agri-text">{t('nav.cropProfile')}</Link>
+              <Link to="/farming-schedule" className="px-3 py-1.5 rounded-xl text-agri-subtext hover:text-agri-text">{t('nav.dailySchedule')}</Link>
+              <Link to="/analytics" className="px-3 py-1.5 rounded-xl bg-agri-primary text-white shadow-sm font-semibold">{t('nav.analytics')}</Link>
+              <Link to="/training-hub" className="px-3 py-1.5 rounded-xl text-agri-subtext hover:text-agri-text">{t('nav.trainingHub')}</Link>
             </nav>
+            <div className="ml-auto flex items-center gap-2">
+              <LanguageSwitcher />
+            </div>
           </div>
         </header>
         <main className="max-w-md mx-auto px-4 py-24 text-center space-y-4">
           <div className="h-20 w-20 mx-auto rounded-3xl bg-agri-primary/10 flex items-center justify-center text-agri-primary">
             <BarChart3 className="h-10 w-10" />
           </div>
-          <h2 className="text-xl font-bold text-agri-text">No Active Crop Plan Found</h2>
+          <h2 className="text-xl font-bold text-agri-text">{t('analytics.noPlanTitle')}</h2>
           <p className="text-sm text-agri-subtext">
-            To view financial analytics, ROI projections, and price forecasts, please select a crop and farming method first.
+            {t('analytics.noPlanDesc')}
           </p>
           <div className="pt-2 flex justify-center gap-3">
             <button
               onClick={() => navigate('/dashboard')}
               className="bg-agri-primary text-white font-semibold text-sm px-5 py-2.5 rounded-xl hover:bg-agri-dark transition-colors"
             >
-              Pick District & Crop
+              {t('analytics.pickDistrictCrop')}
             </button>
             <button
               onClick={() => navigate('/crop-detail')}
               className="border border-agri-border bg-white text-agri-text font-semibold text-sm px-5 py-2.5 rounded-xl hover:bg-agri-bg transition-colors"
             >
-              Browse Crop Profiles
+              {t('analytics.browseCropProfiles')}
             </button>
           </div>
         </main>
@@ -217,10 +225,10 @@ const AnalyticsDashboard: React.FC = () => {
   // OpEx pie data
   const pieData = result
     ? [
-        { name: 'Seeds', value: result.opex.seed_rs, pct: result.opex.seed_pct },
-        { name: 'Labour', value: result.opex.labour_rs, pct: result.opex.labour_pct },
-        { name: 'Fertilizer', value: result.opex.fertilizer_rs, pct: result.opex.fertilizer_pct },
-        { name: 'Other', value: result.opex.other_rs, pct: result.opex.other_pct },
+        { name: t('cropDetail.seeds'), value: result.opex.seed_rs, pct: result.opex.seed_pct },
+        { name: t('cropDetail.labour'), value: result.opex.labour_rs, pct: result.opex.labour_pct },
+        { name: t('cropDetail.fertilizer'), value: result.opex.fertilizer_rs, pct: result.opex.fertilizer_pct },
+        { name: t('cropDetail.other'), value: result.opex.other_rs, pct: result.opex.other_pct },
       ]
     : [];
 
@@ -252,21 +260,21 @@ const AnalyticsDashboard: React.FC = () => {
             <svg className="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2}>
               <path d="m15 18-6-6 6-6" />
             </svg>
-            Back
+            {t('nav.back')}
           </button>
           <div className="h-4 w-px bg-agri-border" />
-          <nav className="flex items-center gap-1.5 text-xs font-semibold overflow-x-auto">
+          <nav className="hidden md:flex items-center gap-1.5 text-xs font-semibold overflow-x-auto flex-1 min-w-0">
             {[
-              { label: 'Location & Crops', path: '/dashboard' },
-              { label: 'Crop Profile', path: '/crop-detail' },
-              { label: 'Daily Schedule', path: '/farming-schedule' },
-              { label: 'Analytics', path: '/analytics' },
-              { label: 'Training Hub', path: '/training-hub' },
+              { labelKey: 'nav.locationCrops', path: '/dashboard' },
+              { labelKey: 'nav.cropProfile', path: '/crop-detail' },
+              { labelKey: 'nav.dailySchedule', path: '/farming-schedule' },
+              { labelKey: 'nav.analytics', path: '/analytics' },
+              { labelKey: 'nav.trainingHub', path: '/training-hub' },
             ].map((item) => {
               const isActive = location.pathname === item.path;
               return (
                 <Link
-                  key={item.label}
+                  key={item.labelKey}
                   to={item.path}
                   className={`px-3 py-1.5 rounded-xl whitespace-nowrap transition-all duration-200 ${
                     isActive
@@ -274,19 +282,20 @@ const AnalyticsDashboard: React.FC = () => {
                       : 'text-agri-subtext hover:text-agri-text hover:bg-agri-bg'
                   }`}
                 >
-                  {item.label}
+                  {t(item.labelKey)}
                 </Link>
               );
             })}
           </nav>
-          <div className="ml-auto">
+          <div className="flex-shrink-0 flex items-center gap-2">
+            <LanguageSwitcher />
             <button
               id="go-to-training-hub"
               onClick={() => { setCurrentPhase(5); navigate('/training-hub'); }}
               className="flex items-center gap-2 bg-agri-primary text-white text-xs font-semibold px-4 py-2 rounded-xl
                 hover:bg-agri-dark transition-colors"
             >
-              Next: Training Hub
+              {t('analytics.nextTrainingHub')}
               <svg className="h-3 w-3" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2.5}>
                 <path d="m9 18 6-6-6-6" />
               </svg>
@@ -301,7 +310,7 @@ const AnalyticsDashboard: React.FC = () => {
           <div className="absolute inset-0 bg-gradient-to-br from-agri-primary/20 to-transparent" />
           <div className="relative z-10 flex flex-wrap gap-6 items-center justify-between">
             <div>
-              <p className="text-agri-lime/70 text-xs font-semibold uppercase tracking-widest mb-1">Phase 4 — Financial Analytics</p>
+              <p className="text-agri-lime/70 text-xs font-semibold uppercase tracking-widest mb-1">{t('analytics.phase4')}</p>
               <h1 className="text-2xl font-bold text-white">{selectedCrop.name_en} · {selectedMethod.method_type.replace('_', ' ')}</h1>
               <p className="text-white/50 text-sm mt-1">
                 {userInputs.area_value} {userInputs.area_unit} · Rs. {userInputs.capital_lkr.toLocaleString()} capital
@@ -318,7 +327,7 @@ const AnalyticsDashboard: React.FC = () => {
                 <path d="M21 12a9 9 0 0 0-9-9 9.75 9.75 0 0 0-6.74 2.74L3 8" /><path d="M3 3v5h5" />
                 <path d="M3 12a9 9 0 0 0 9 9 9.75 9.75 0 0 0 6.74-2.74L21 16" /><path d="M16 16h5v5" />
               </svg>
-              Recalculate
+              {t('analytics.recalculate')}
             </button>
           </div>
         </div>
@@ -350,10 +359,10 @@ const AnalyticsDashboard: React.FC = () => {
               <div className="flex items-center gap-3 bg-orange-50 border border-orange-300 rounded-2xl px-5 py-4 text-sm text-orange-700">
                 <AlertTriangle className="h-5 w-5 text-orange-600 flex-shrink-0" />
                 <div>
-                  <p className="font-bold">Capital shortfall detected</p>
+                  <p className="font-bold">{t('analytics.shortfallTitle')}</p>
                   <p className="text-xs mt-0.5">
                     Your plan requires <strong>{fmtLKR(result.opex.total_rs)}</strong> but you have <strong>{fmtLKR(result.capital_lkr)}</strong>.
-                    Consider reducing area or choosing a lower-cost method.
+                    {' '}{t('analytics.shortfallDesc')}
                   </p>
                 </div>
               </div>
@@ -361,22 +370,22 @@ const AnalyticsDashboard: React.FC = () => {
 
             {/* Summary stat cards */}
             <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
-              <StatCard icon={<Coins className="h-5 w-5 text-agri-lime" />} label="Total OpEx" value={fmtLKR(result.opex.total_rs)} sub={`${totalAcres.toFixed(3)} acres`} accent />
-              <StatCard icon={<Wheat className="h-5 w-5 text-emerald-600" />} label="Est. Yield" value={fmtKg(result.yield.estimated_kg)} sub={`${fmtKg(result.yield.avg_yield_per_acre)} / acre`} />
+              <StatCard icon={<Coins className="h-5 w-5 text-agri-lime" />} label={t('analytics.totalOpex')} value={fmtLKR(result.opex.total_rs)} sub={`${totalAcres.toFixed(3)} ${t('cropDetail.unitAcres')}`} accent />
+              <StatCard icon={<Wheat className="h-5 w-5 text-emerald-600" />} label={t('analytics.estYield')} value={fmtKg(result.yield.estimated_kg)} sub={`${fmtKg(result.yield.avg_yield_per_acre)} / ${t('analytics.perAcre')}`} />
               <StatCard
                 icon={<TrendingUp className="h-5 w-5 text-blue-600" />}
-                label="Gross Revenue"
+                label={t('analytics.grossRevenue')}
                 value={result.revenue.gross_revenue_rs > 0 ? fmtLKR(result.revenue.gross_revenue_rs) : 'N/A'}
-                sub={result.revenue.predicted_price_per_kg > 0 ? `@ Rs.${result.revenue.predicted_price_per_kg}/kg` : 'Price unavailable'}
+                sub={result.revenue.predicted_price_per_kg > 0 ? `@ Rs.${result.revenue.predicted_price_per_kg}/kg` : t('analytics.priceUnavailable')}
                 positive={result.revenue.gross_revenue_rs > 0}
               />
               <StatCard
                 icon={roiPositive ? <Rocket className="h-5 w-5 text-emerald-600" /> : <TrendingDown className="h-5 w-5 text-red-600" />}
-                label="Net Profit / ROI"
+                label={t('analytics.netProfitRoi')}
                 value={result.revenue.net_profit_rs !== 0 ? fmtLKR(result.revenue.net_profit_rs) : 'N/A'}
                 sub={
                   result.revenue.roi_pct !== 0
-                    ? `${result.revenue.roi_pct > 0 ? '+' : ''}${result.revenue.roi_pct.toFixed(1)}% ROI${result.revenue.profit_margin_pct ? ` · ${result.revenue.profit_margin_pct.toFixed(0)}% Margin` : ''}`
+                    ? `${result.revenue.roi_pct > 0 ? '+' : ''}${result.revenue.roi_pct.toFixed(1)}% ROI${result.revenue.profit_margin_pct ? ` · ${result.revenue.profit_margin_pct.toFixed(0)}% ${t('analytics.margin')}` : ''}`
                     : undefined
                 }
                 positive={roiPositive && result.revenue.net_profit_rs > 0}
@@ -389,7 +398,7 @@ const AnalyticsDashboard: React.FC = () => {
               {/* OpEx Pie */}
               <div className="bg-white rounded-3xl border border-agri-border p-6">
                 <h2 className="text-base font-bold text-agri-text mb-5 flex items-center gap-2">
-                  <PieChartIcon className="h-5 w-5 text-emerald-600" /> OpEx Breakdown
+                  <PieChartIcon className="h-5 w-5 text-emerald-600" /> {t('analytics.opexBreakdown')}
                 </h2>
                 <ResponsiveContainer width="100%" height={260}>
                   <PieChart>
@@ -431,16 +440,16 @@ const AnalyticsDashboard: React.FC = () => {
               {/* Price forecast line chart */}
               <div className="bg-white rounded-3xl border border-agri-border p-6">
                 <h2 className="text-base font-bold text-agri-text mb-1 flex items-center gap-2">
-                  <BarChart3 className="h-5 w-5 text-agri-primary" /> Price Forecast (Next 26 Weeks)
+                  <BarChart3 className="h-5 w-5 text-agri-primary" /> {t('analytics.priceForecast')}
                 </h2>
                 <p className="text-xs text-agri-subtext mb-5">
-                  Forward-looking ML weekly market price prediction (Rs./kg) from this month onwards
+                  {t('analytics.priceForecastDesc')}
                 </p>
                 {historyLoading ? (
                   <div className="h-64 bg-agri-bg rounded-xl animate-pulse" />
                 ) : chartData.length === 0 ? (
                   <div className="h-64 flex items-center justify-center text-agri-subtext text-sm">
-                    Price forecast not available for this crop
+                    {t('analytics.priceNotAvailable')}
                   </div>
                 ) : (
                   <ResponsiveContainer width="100%" height={260}>
@@ -476,7 +485,7 @@ const AnalyticsDashboard: React.FC = () => {
                     <Bot className="h-5 w-5 text-agri-primary flex-shrink-0" />
                     <div>
                       <p className="text-xs text-agri-subtext">
-                        Predicted Market Price after Harvest {result.price_prediction.harvest_date ? `(${new Date(result.price_prediction.harvest_date).toLocaleDateString('en-LK', { month: 'short', day: 'numeric', year: 'numeric' })})` : ''}
+                        {t('analytics.predictedPricePostHarvest')} {result.price_prediction.harvest_date ? `(${new Date(result.price_prediction.harvest_date).toLocaleDateString('en-LK', { month: 'short', day: 'numeric', year: 'numeric' })})` : ''}
                       </p>
                       <p className="text-base font-bold text-agri-primary">
                         Rs. {result.price_prediction.predicted_price_rs_per_kg.toFixed(2)} / kg
@@ -491,13 +500,13 @@ const AnalyticsDashboard: React.FC = () => {
             {result.climate_prediction && (
               <div className="bg-white rounded-3xl border border-agri-border p-6">
                 <h2 className="text-base font-bold text-agri-text mb-4 flex items-center gap-2">
-                  <CloudSun className="h-5 w-5 text-amber-500" /> Climate Forecast (Harvest Window)
+                  <CloudSun className="h-5 w-5 text-amber-500" /> {t('analytics.climateForecast')}
                 </h2>
                 <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
-                  <InfoChip icon={<CloudRain className="h-6 w-6 text-blue-500" />} label="Rainfall" value={`${result.climate_prediction.predicted_rainfall_mm} mm`} />
-                  <InfoChip icon={<Thermometer className="h-6 w-6 text-orange-500" />} label="Avg Temp" value={`${result.climate_prediction.predicted_avg_temp_c}°C`} />
-                  <InfoChip icon={<Snowflake className="h-6 w-6 text-sky-400" />} label="Min Temp" value={`${result.climate_prediction.predicted_min_temp_c}°C`} />
-                  <InfoChip icon={<Flame className="h-6 w-6 text-red-500" />} label="Max Temp" value={`${result.climate_prediction.predicted_max_temp_c}°C`} />
+                  <InfoChip icon={<CloudRain className="h-6 w-6 text-blue-500" />} label={t('analytics.rainfall')} value={`${result.climate_prediction.predicted_rainfall_mm} mm`} />
+                  <InfoChip icon={<Thermometer className="h-6 w-6 text-orange-500" />} label={t('analytics.avgTemp')} value={`${result.climate_prediction.predicted_avg_temp_c}°C`} />
+                  <InfoChip icon={<Snowflake className="h-6 w-6 text-sky-400" />} label={t('analytics.minTemp')} value={`${result.climate_prediction.predicted_min_temp_c}°C`} />
+                  <InfoChip icon={<Flame className="h-6 w-6 text-red-500" />} label={t('analytics.maxTemp')} value={`${result.climate_prediction.predicted_max_temp_c}°C`} />
                 </div>
               </div>
             )}
@@ -514,13 +523,13 @@ const AnalyticsDashboard: React.FC = () => {
                   </div>
                   <div>
                     <h2 className="text-base font-bold text-agri-text flex flex-wrap items-center gap-2">
-                      Crop Yield, Revenue & ROI Formulas
+                      {t('analytics.formulasTitle')}
                       <span className="text-[10px] font-bold bg-agri-lime/20 text-agri-dark px-2.5 py-0.5 rounded-full border border-agri-lime/30">
-                        Sri Lanka Agricultural Standards
+                        {t('analytics.slStandards')}
                       </span>
                     </h2>
                     <p className="text-xs text-agri-subtext mt-0.5">
-                      Yield estimation, revenue prediction, return on investment & Sri Lankan land unit relationships.
+                      {t('analytics.formulasDesc')}
                     </p>
                   </div>
                 </div>

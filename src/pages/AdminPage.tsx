@@ -5,9 +5,11 @@
 import React, { useEffect, useState, useCallback, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
+import { useLanguage } from '../context/LanguageContext';
 import { api } from '../api/axios';
 import { supabase } from '../lib/supabaseClient';
 import { BarChart3, Users, Sprout, BookOpen } from 'lucide-react';
+import LanguageSwitcher from '../components/ui/LanguageSwitcher';
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 interface AdminUser {
@@ -144,6 +146,7 @@ const AdminPage: React.FC = () => {
   const navigate = useNavigate();
   const { profile, signOut } = useAuth();
   const authHeader = useAuthHeader();
+  const { t } = useLanguage();
 
   const [activeTab, setActiveTab] = useState<Tab>('overview');
   const [stats, setStats] = useState<Stats | null>(null);
@@ -364,6 +367,9 @@ const AdminPage: React.FC = () => {
             <p className="text-white text-xs font-semibold truncate">{profile?.full_name ?? 'Admin'}</p>
             <p className="text-white/40 text-[10px] truncate">{profile?.email}</p>
           </div>
+          <div className="px-2 pb-1">
+            <LanguageSwitcher className="w-full" />
+          </div>
           <button
             onClick={() => navigate('/dashboard')}
             className="w-full flex items-center gap-2 px-3 py-2 rounded-xl text-white/50 hover:text-white hover:bg-white/5 text-xs font-medium transition-colors"
@@ -371,7 +377,7 @@ const AdminPage: React.FC = () => {
             <svg className="h-3.5 w-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2}>
               <path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z" /><polyline points="9 22 9 12 15 12 15 22" />
             </svg>
-            Back to Dashboard
+            {t('nav.backToDashboard')}
           </button>
           <button
             onClick={async () => { await signOut(); navigate('/login'); }}
@@ -380,7 +386,7 @@ const AdminPage: React.FC = () => {
             <svg className="h-3.5 w-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2}>
               <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4" /><polyline points="16 17 21 12 16 7" /><line x1="21" y1="12" x2="9" y2="12" />
             </svg>
-            Sign Out
+            {t('nav.signOut')}
           </button>
         </div>
       </aside>

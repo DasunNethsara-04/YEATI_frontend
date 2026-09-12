@@ -7,7 +7,9 @@
 import React, { useEffect, useState, useCallback } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { usePlan } from '../context/PlanContext';
+import { useLanguage } from '../context/LanguageContext';
 import { api } from '../api/axios';
+import LanguageSwitcher from '../components/ui/LanguageSwitcher';
 import {
   Globe,
   Landmark,
@@ -211,6 +213,7 @@ const CourseCard: React.FC<{ course: Course; recommended?: boolean }> = ({ cours
 const TrainingHubPage: React.FC = () => {
   const navigate = useNavigate();
   const { selectedCrop, selectedMethod, setCurrentPhase } = usePlan();
+  const { t } = useLanguage();
 
   const [courses, setCourses] = useState<Course[]>([]);
   const [recommended, setRecommended] = useState<Course[]>([]);
@@ -286,16 +289,16 @@ const TrainingHubPage: React.FC = () => {
           <div className="h-4 w-px bg-agri-border" />
           <nav className="flex items-center gap-1.5 text-xs font-semibold overflow-x-auto">
             {[
-              { label: 'Location & Crops', path: '/dashboard' },
-              { label: 'Crop Profile', path: '/crop-detail' },
-              { label: 'Daily Schedule', path: '/farming-schedule' },
-              { label: 'Analytics', path: '/analytics' },
-              { label: 'Training Hub', path: '/training-hub' },
+              { labelKey: 'nav.locationCrops', path: '/dashboard' },
+              { labelKey: 'nav.cropProfile', path: '/crop-detail' },
+              { labelKey: 'nav.dailySchedule', path: '/farming-schedule' },
+              { labelKey: 'nav.analytics', path: '/analytics' },
+              { labelKey: 'nav.trainingHub', path: '/training-hub' },
             ].map((item) => {
               const isActive = location.pathname === item.path;
               return (
                 <Link
-                  key={item.label}
+                  key={item.labelKey}
                   to={item.path}
                   className={`px-3 py-1.5 rounded-xl whitespace-nowrap transition-all duration-200 ${
                     isActive
@@ -303,11 +306,14 @@ const TrainingHubPage: React.FC = () => {
                       : 'text-agri-subtext hover:text-agri-text hover:bg-agri-bg'
                   }`}
                 >
-                  {item.label}
+                  {t(item.labelKey)}
                 </Link>
               );
             })}
           </nav>
+          <div className="ml-auto flex-shrink-0">
+            <LanguageSwitcher />
+          </div>
         </div>
       </header>
 
